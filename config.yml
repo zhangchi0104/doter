@@ -1,0 +1,25 @@
+# @format
+
+# global hooks
+# supported keys:
+# before_setup: Array of commands before all files are processd
+# after_setup: Array of commands after all files are processed
+# after setup
+hooks:
+# Files as array
+# supported keys:
+#   dst: filename to be saved
+#   before_setup: Array of commands to executed before setup
+#   after_setup: array of commands after setup
+#   force_override: should override existing file
+files:
+  '~/.vimrc':
+    dst: 'vimrc'
+  '~/.config/nvim/init.vim':
+    dst: nvim_init.vim
+    deps:
+      - '~/.vimrc'
+  '~/.zshrc':
+    dst: 'zshrc'
+  '~/.tmux.conf.local':
+    dst: tmux.conf.local

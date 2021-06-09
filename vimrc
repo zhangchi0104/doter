@@ -20,6 +20,14 @@ set splitright
 if &compatible
       set nocompatible               " Be iMproved
 endif
+if (empty($TMUX))
+  if (has("nvim"))
+    let $NVIM_TUI_ENABLE_TRUE_COLOR=1
+  endif
+  if (has("termguicolors"))
+    set termguicolors
+  endif
+endif
 
 let s:dein_path = join(['/Users/alexzhang/', has('nvim') ? '.nvim': '.vim'], '')
 " Required:
@@ -29,12 +37,13 @@ let &runtimepath .= ','.expand(join([s:dein_path,'/bundles/repos/github.com/Shou
 call dein#begin(join([s:dein_path, '/bundles'], ''))
 " Let dein manage dein
 " Required:
-    call dein#add(expand(join([s:dein_path, '/bundles/repos/github.com/Shougo/dein.vim']), ''))
+    call dein#add('Shug/dein.vim')
     call dein#add('preservim/nerdtree')
     call dein#add('Shougo/denite.nvim')
     call dein#add('vim-airline/vim-airline')
     call dein#add('liuchengxu/vim-which-key', {'on_cmd': ['WhichKey', 'WhichKey!']}) 
     call dein#add('neoclide/coc.nvim', {'on_if': 'has("nvim")', 'rev': 'release'})
+    call dein#add('joshdick/onedark.vim')
     if !has('nvim')
           call dein#add('roxma/nvim-yarp')
           call dein#add('roxma/vim-hug-neovim-rpc')
@@ -50,7 +59,7 @@ call dein#end()
 " Required:
 filetype plugin indent on
 syntax enable
-
+colorscheme onedark
 
 "##### Plugin settings 
 

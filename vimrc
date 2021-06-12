@@ -29,7 +29,7 @@ if (empty($TMUX))
   endif
 endif
 
-let s:dein_path = join(['/Users/alexzhang/', has('nvim') ? '.nvim': '.vim'], '')
+let s:dein_path = join([$HOME, has('nvim') ? '.nvim': '.vim'], '/')
 " Required:
 "set runtimepath+=/Users/alexzhang/.vim/bundles/repos/github.com/Shougo/dein.vim
 let &runtimepath .= ','.expand(join([s:dein_path,'/bundles/repos/github.com/Shougo/dein.vim'], ''))

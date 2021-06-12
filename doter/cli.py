@@ -1,0 +1,51 @@
+from click import group, option, pass_context
+from shutil import copy
+from os.path import islink, expanduser
+from doter.lib  import load_config, resolve_files, resolve_deps, dispatch_item
+@group()
+@option('--config',
+        '-c',
+        default='./config.yml',
+        show_default=True,
+        type=str,
+        help='specify config file')
+@pass_context
+def cli(ctx, config):
+    ctx.ensure_object(dict)
+    ctx.obj['config'] = config
+
+
+@cli.command()
+@pass_context
+@option('--dry-run', '-d', is_flag=True, help='specify config file')
+def link(ctx, dry_run: bool):
+    config = ctx.obj['config']
+    configs = load_config(config)
+    dotfiles = resolve_files(configs)
+    plans = resolve_deps(dotfiles)
+    if dry_run:
+        for i, plan in enumerate(plans):
+            print(f'{i+1}. {plan}')
+        return
+    else:
+        for plan in plans:
+            dispatch_item(plan)
+
+
+@cli.command()
+@pass_context
+@option('--dry-run', '-d', is_flag=True, help='specify config file')
+def backup(ctx, dry_run):
+    config_file = ctx.obj['config']
+    configs = load_config(config_file)
+    dotfiles = resolve_files(configs)
+    for config in dotfiles.values():
+        if not dry_run and not islink(config['src']):
+            copy(expanduser(config['src']), expanduser(config['dst']))
+        elif islink(config['src']):
+            print(
+                f'Skipping backing up {config["src"]}, because it is a symlink'
+            )
+        else:
+            print(f"Backup: {config['src']} -> {config['dst']}")
+

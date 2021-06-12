@@ -1,15 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
-from click.decorators import group
-from typings import ConfigFile, DotFileConfig, Dict, List
+from doter.typings import ConfigFile, DotFileConfig, Dict, List
 from yaml import load as load_yaml, FullLoader
 from copy import deepcopy
-from os import symlink, stat
-from shutil import copy
 from os.path import exists, expanduser, islink, abspath
 from subprocess import run as run_cmd
-from click import group, option, pass_context
-
+from os import symlink, stat
 
 def load_config(path: str):
     f = open(path, 'r')
@@ -77,53 +73,3 @@ def resolve_deps(dotfiles: Dict[str, DotFileConfig]):
     return deps
 
 
-@group()
-@option('--config',
-        '-c',
-        default='./config.yml',
-        show_default=True,
-        type=str,
-        help='specify config file')
-@pass_context
-def cli(ctx, config):
-    ctx.ensure_object(dict)
-    ctx.obj['config'] = config
-
-
-@cli.command()
-@pass_context
-@option('--dry-run', '-d', is_flag=True, help='specify config file')
-def link(ctx, dry_run: bool):
-    config = ctx.obj['config']
-    configs = load_config(config)
-    dotfiles = resolve_files(configs)
-    plans = resolve_deps(dotfiles)
-    if dry_run:
-        for i, plan in enumerate(plans):
-            print(f'{i+1}. {plan}')
-        return
-    else:
-        for plan in plans:
-            dispatch_item(plan)
-
-
-@cli.command()
-@pass_context
-@option('--dry-run', '-d', is_flag=True, help='specify config file')
-def backup(ctx, dry_run):
-    config_file = ctx.obj['config']
-    configs = load_config(config_file)
-    dotfiles = resolve_files(configs)
-    for config in dotfiles.values():
-        if not dry_run and not islink(config['src']):
-            copy(expanduser(config['src']), expanduser(config['dst']))
-        elif islink(config['src']):
-            print(
-                f'Skipping backing up {config["src"]}, because it is a symlink'
-            )
-        else:
-            print(f"Backup: {config['src']} -> {config['dst']}")
-
-
-if __name__ == '__main__':
-    cli(obj={})

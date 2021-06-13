@@ -1,18 +1,21 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+from rich.progress import Progress, TaskID
 from doter.typings import ConfigFile, DotFileConfig, Dict, List
 from yaml import load as load_yaml, FullLoader
 from copy import deepcopy
 from os.path import exists, expanduser, islink, abspath
 from subprocess import run as run_cmd
 from os import symlink, stat
+from rich.console import Console
+
 
 def load_config(path: str):
     f = open(path, 'r')
     config = load_yaml(f, Loader=FullLoader)
     f.close()
 
-    return ConfigFile(config)
+    return config
 
 
 def execute_shell(args: list):
@@ -23,24 +26,35 @@ def execute_shell(args: list):
             'with return code {proc.returncode}')
 
 
-def dispatch_item(config_item: DotFileConfig):
+def dispatch_item(config_item: DotFileConfig, console: Console,
+                  progress: Progress, task_id: TaskID):
     pre_exec_hooks = config_item.get('before_setup', None)
     src = expanduser(config_item['src'])
-    print(src, config_item['src'])
+    if (exists(src) or islink(src)):
+        console.log(
+            f'⚠️ Skipping {config_item["dst"]} -> {config_item["src"]}' +
+            ', because the file/link already exists')
+        return
+
     if pre_exec_hooks and len(pre_exec_hooks) > 0:
         for cmd in pre_exec_hooks:
+            progress.update(task_id,
+                            description='🚧 Executing Pre-install hook: ' + cmd)
             execute_shell(cmd.split(' '))
-    if config_item.get('force_override', False) or (not exists(src)
-                                                    and not islink(src)):
+    if config_item.get('force_override', False):
         from_file = abspath(config_item['dst'])
         symlink(from_file, src)
-    else:
-        print(f'skipping {config_item["dst"]} -> {config_item["src"]}' +
-              ', because the file/link already exists')
+        progress.update(
+            f'🚧 Linking {config_item["dst"]} -> {config_item["src"]}')
+
     post_exec_hooks = config_item.get('after_setup', None)
     if post_exec_hooks and len(post_exec_hooks) > 0:
         for cmd in post_exec_hooks:
+            progress.update('Executing post-install hook: ' + cmd)
             execute_shell(cmd.split(' '))
+
+    console.log(
+        f'✅ Successfully linked {config_item["dst"]} -> {config_item["src"]}')
 
 
 def resolve_files(config: ConfigFile):
@@ -71,5 +85,3 @@ def resolve_deps(dotfiles: Dict[str, DotFileConfig]):
     for key in dotfiles.keys():
         _do_resolve_deps(key, dotfiles, deps, visited)
     return deps
-
-

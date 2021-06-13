@@ -1,7 +1,13 @@
 from click import group, option, pass_context
 from shutil import copy
 from os.path import islink, expanduser
-from doter.lib  import load_config, resolve_files, resolve_deps, dispatch_item
+
+from rich import text
+from doter.lib import load_config, resolve_files, resolve_deps, dispatch_item
+from rich.progress import track, Progress, SpinnerColumn, TextColumn
+from time import sleep, time
+
+
 @group()
 @option('--config',
         '-c',
@@ -19,6 +25,7 @@ def cli(ctx, config):
 @pass_context
 @option('--dry-run', '-d', is_flag=True, help='specify config file')
 def link(ctx, dry_run: bool):
+    console = ctx.obj['console']
     config = ctx.obj['config']
     configs = load_config(config)
     dotfiles = resolve_files(configs)
@@ -28,8 +35,23 @@ def link(ctx, dry_run: bool):
             print(f'{i+1}. {plan}')
         return
     else:
-        for plan in plans:
-            dispatch_item(plan)
+        with Progress(SpinnerColumn(),
+                      TextColumn('({task.completed}/{task.total})'),
+                      TextColumn('[progress.description]{task.description}'),
+                      console=console,
+                      transient=True) as progress:
+            task = progress.add_task('linking items', total=len(plans))
+            start_time = time()
+            for plan in plans:
+                dispatch_item(plan, console, progress, task)
+                progress.update(
+                    task,
+                    description=
+                    f'✅ Done processing {plan["dst"]} -> {plan["src"]}',
+                    advance=1)
+                sleep(1)
+            end_time = time()
+        console.log(f'✨ Completed in {(end_time - start_time):.2f}s')
 
 
 @cli.command()
@@ -48,4 +70,3 @@ def backup(ctx, dry_run):
             )
         else:
             print(f"Backup: {config['src']} -> {config['dst']}")
-

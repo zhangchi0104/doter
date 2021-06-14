@@ -32,7 +32,7 @@ def link(ctx, dry_run: bool, targets):
     configs = load_config(config)
     dotfiles = resolve_files(configs)
     if len(targets):
-        plans = [dotfiles[v] for v in targets] 
+        plans = [dotfiles[v] for v in targets]
     else:
         plans = dotfiles.values()
     if dry_run:
@@ -47,7 +47,7 @@ def link(ctx, dry_run: bool, targets):
                       transient=True) as progress:
             task = progress.add_task('linking items', total=len(plans))
             start_time = time()
-            
+
             for plan in plans:
                 dispatch_item(plan, console, progress, task)
                 progress.update(

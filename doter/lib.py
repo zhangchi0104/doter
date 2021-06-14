@@ -59,8 +59,6 @@ def dispatch_item(config_item: DotFileConfig, console: Console,
 
 def resolve_files(config: ConfigFile):
     dotfiles = deepcopy(config['files'])
-    for key, _ in dotfiles.items():
-        dotfiles[key]['src'] = key
     return dotfiles
 
 

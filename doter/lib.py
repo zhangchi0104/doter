@@ -32,7 +32,7 @@ def dispatch_item(config_item: DotFileConfig, console: Console,
     src = expanduser(config_item['src'])
     if (exists(src) or islink(src)):
         console.log(
-            f'⚠️ Skipping {config_item["dst"]} -> {config_item["src"]}' +
+            f'⚠️  Skipping {config_item["dst"]} -> {config_item["src"]}' +
             ', because the file/link already exists')
         return
 

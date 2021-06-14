@@ -1,6 +1,7 @@
 from click import group, option, pass_context
 from shutil import copy
 from os.path import islink, expanduser
+from click.decorators import argument
 
 from rich import text
 from doter.lib import load_config, resolve_files, resolve_deps, dispatch_item
@@ -22,14 +23,18 @@ def cli(ctx, config):
 
 
 @cli.command()
+@argument('targets', nargs=-1)
 @pass_context
 @option('--dry-run', '-d', is_flag=True, help='specify config file')
-def link(ctx, dry_run: bool):
+def link(ctx, dry_run: bool, targets):
     console = ctx.obj['console']
     config = ctx.obj['config']
     configs = load_config(config)
     dotfiles = resolve_files(configs)
-    plans = resolve_deps(dotfiles)
+    if len(targets):
+        plans = [dotfiles[v] for v in targets] 
+    else:
+        plans = dotfiles.values()
     if dry_run:
         for i, plan in enumerate(plans):
             print(f'{i+1}. {plan}')
@@ -42,6 +47,7 @@ def link(ctx, dry_run: bool):
                       transient=True) as progress:
             task = progress.add_task('linking items', total=len(plans))
             start_time = time()
+            
             for plan in plans:
                 dispatch_item(plan, console, progress, task)
                 progress.update(

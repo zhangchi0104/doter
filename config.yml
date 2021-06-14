@@ -13,20 +13,24 @@ hooks:
 #   after_setup: array of commands after setup
 #   force_override: should override existing file
 files:
-  '~/.vimrc':
+  vim:
+    src: '~/.vimrc':
     dst: 'vimrc'
     before_setup:
       - 'sh ./installer.sh ~/.vim/bundles'
-  '~/.config/nvim/init.vim':
+  nvim:
+    src: '~/.config/nvim/init.vim':
     dst: nvim_init.vim
     before_setup:
       - 'sh ./installer.sh ~/.nvim/bundles'
-  '~/.zshrc':
+  zsh:
+    src: '~/.zshrc':
     dst: 'zshrc'
     before_setup:
       - 'wget -O ~/antigen.zsh git.io/antigen'
       - 'sh ./install_starship.sh'
-  '~/.tmux.conf.local':
+  tmux:
+    src:'~/.tmux.conf.local':
     dst: tmux.conf.local
     before_setup:
       - git clone https://github.com/gpakosz/.tmux.git ~/.tmux

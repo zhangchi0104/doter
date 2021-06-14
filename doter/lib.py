@@ -26,11 +26,11 @@ def _should_create_link(path: str):
 
 
 def execute_shell(args: list):
-    proc = run_cmd(args, shell=True)
+    proc = run_cmd(args, shell='/bin/bash')
     if proc.returncode != 0:
         raise RuntimeError(
             f'Error occured when running command"{" ".join(args)}"' +
-            'with return code {proc.returncode}')
+            f'with return code {proc.returncode}')
 
 
 def dispatch_item(config_item: DotFileConfig, console: Console,

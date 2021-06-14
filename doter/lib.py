@@ -18,8 +18,15 @@ def load_config(path: str):
     return config
 
 
+def _should_create_link(path: str):
+    """
+    cerate link only if there is no file or no link
+    """
+    return (not exists(path)) and (not exists(path))
+
+
 def execute_shell(args: list):
-    proc = run_cmd(args)
+    proc = run_cmd(args, shell=True)
     if proc.returncode != 0:
         raise RuntimeError(
             f'Error occured when running command"{" ".join(args)}"' +
@@ -41,7 +48,8 @@ def dispatch_item(config_item: DotFileConfig, console: Console,
             progress.update(task_id,
                             description='🚧 Executing Pre-install hook: ' + cmd)
             execute_shell(cmd.split(' '))
-    if config_item.get('force_override', False):
+    if config_item.get('force_override', False) and _should_create_link(
+            config_item['src']):
         from_file = abspath(config_item['dst'])
         symlink(from_file, src)
         progress.update(

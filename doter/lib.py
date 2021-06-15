@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 from rich.progress import Progress, TaskID
 from doter.typings import ConfigFile, DotFileConfig, Dict, List
-from yaml import load as load_yaml, FullLoader
 from copy import deepcopy
+from envyaml import EnvYAML as EnvYaml
 from os.path import exists, expanduser, islink, abspath
 from subprocess import run as run_cmd
 from os import symlink, stat
@@ -11,10 +11,8 @@ from rich.console import Console
 
 
 def load_config(path: str):
-    f = open(path, 'r')
-    config = load_yaml(f, Loader=FullLoader)
-    f.close()
 
+    config = EnvYaml(path)
     return config
 
 
@@ -26,7 +24,7 @@ def _should_create_link(path: str):
 
 
 def execute_shell(args: list):
-    proc = run_cmd(args, shell='/bin/bash')
+    proc = run_cmd(args)
     if proc.returncode != 0:
         raise RuntimeError(
             f'Error occured when running command"{" ".join(args)}"' +
@@ -37,7 +35,7 @@ def dispatch_item(config_item: DotFileConfig, console: Console,
                   progress: Progress, task_id: TaskID):
     pre_exec_hooks = config_item.get('before_setup', None)
     src = expanduser(config_item['src'])
-    if (exists(src) or islink(src)):
+    if (exists(src) or islink(src)) and not config_item.get('force_override', False):
         console.log(
             f'⚠️  Skipping {config_item["dst"]} -> {config_item["src"]}' +
             ', because the file/link already exists')
@@ -48,17 +46,15 @@ def dispatch_item(config_item: DotFileConfig, console: Console,
             progress.update(task_id,
                             description='🚧 Executing Pre-install hook: ' + cmd)
             execute_shell(cmd.split(' '))
-    if config_item.get('force_override', False) and _should_create_link(
-            config_item['src']):
-        from_file = abspath(config_item['dst'])
-        symlink(from_file, src)
-        progress.update(
-            f'🚧 Linking {config_item["dst"]} -> {config_item["src"]}')
+    from_file = abspath(config_item['dst'])
+    symlink(from_file, src)
+    progress.update(task_id,
+        description=f'🚧 Linking {config_item["dst"]} -> {config_item["src"]}')
 
     post_exec_hooks = config_item.get('after_setup', None)
     if post_exec_hooks and len(post_exec_hooks) > 0:
         for cmd in post_exec_hooks:
-            progress.update('Executing post-install hook: ' + cmd)
+            progress.update(task_id, description='Executing post-install hook: ' + cmd)
             execute_shell(cmd.split(' '))
 
     console.log(

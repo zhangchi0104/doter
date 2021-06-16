@@ -1,7 +1,6 @@
 class Subscriber(object):
     def __init__(self):
         super().__init__()
-        self._handlers = {}
 
     def reigster_handler(self, event, handler):
         """[summary]
@@ -13,8 +12,11 @@ class Subscriber(object):
         self._handlers[event] = handler
 
     def handle(self, event, payload):
-        if event in self._handlers.keys:
-            self._handlers[event](payload)
+        try:
+            handler = getattr(self, f'_on_{event}')
+            handler(payload)
+        except AttributeError:
+            return
 
 
 class EventPublisher(object):
@@ -31,7 +33,7 @@ class EventPublisher(object):
         """
         self._subscribers.append(subcriber)
 
-    def publish(self, event_type, payload):
+    def publish(self, event_type, payload=None):
         """
         publish the event to the notifiers
 

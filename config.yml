@@ -23,6 +23,7 @@ files:
     dst: nvim_init.vim
     before_setup:
       - 'sh ./installer.sh ${HOME}/.nvim/bundles'
+      - 'git clone https://github.com/microsoft/python-type-stubs.git ${HOME}/.nvim/typings'
   zsh:
     src: '~/.zshrc'
     dst: 'zshrc'
@@ -33,5 +34,5 @@ files:
     src: '~/.tmux.conf.local'
     dst: tmux.conf.local
     before_setup:
-      - git clone https://github.com/gpakosz/.tmux.git ~/.tmux
+      - 'git clone https://github.com/gpakosz/.tmux.git ${HOME}/.tmux'
       - 'ln -s -f .tmux/.tmux.conf ${HOME}/.tmux.conf'

@@ -59,24 +59,24 @@ class DoterApp(EventPublisher):
             self.publish(
                 'update_progress',
                 {'message': f'🚧 Executing {which}-install hook: ' + cmd})
+            print(cmd)
             self._execute_shell(cmd.split(' '))
 
-    def install(self, dry_run=False, *targets):
+    def install(self, *targets):
         """Install all the dotfiles in the specified by targets,
         default to all specified in the config.yml
 
         Args:
             dry_run (bool, optional): [description]. Defaults to False.
         """
-        if len(targets):
+        print("calling install")
+        print(targets)
+        if len(targets) > 0:
             plans = [self._dotfiles[v] for v in targets]
         else:
             plans = self._dotfiles.values()
-
-        if dry_run:
-            # TODO: pretty print info
-            return
         self.publish('install_start', len(plans))
+        print(plans)
         for plan in plans:
             self._dispatch_item(plan)
             self.publish(
@@ -101,8 +101,9 @@ class DoterApp(EventPublisher):
                     f'Skipping backing up {config["src"]}, because it is a symlink'
                 )
 
-    def _execute_shell(args: list):
+    def _execute_shell(self, args: list):
         proc = run_cmd(args)
+        print("<<<<<<<<", proc.returncode)
         if proc.returncode != 0:
             raise RuntimeError(
                 f'Error occured when running command"{" ".join(args)}"' +

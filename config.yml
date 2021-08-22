@@ -22,17 +22,31 @@ files:
     src: '~/.config/nvim/init.vim'
     dst: nvim_init.vim
     before_setup:
-      - 'sh ./installer.sh ${HOME}/.nvim/bundles'
       - 'git clone https://github.com/microsoft/python-type-stubs.git ${HOME}/.nvim/typings'
+      - 'sh ./installer.sh ${HOME}/.nvim/bundles'
   zsh:
     src: '~/.zshrc'
     dst: 'zshrc'
     before_setup:
       - 'wget -O ${HOME}/antigen.zsh git.io/antigen'
-      - 'sh ./install_starship.sh'
   tmux:
     src: '~/.tmux.conf.local'
     dst: tmux.conf.local
     before_setup:
       - 'git clone https://github.com/gpakosz/.tmux.git ${HOME}/.tmux'
       - 'ln -s -f .tmux/.tmux.conf ${HOME}/.tmux.conf'
+  starship:
+    before_setup:
+      - 'sh ./install_starship.sh'
+  test:
+    src: '~/doter.test'
+    dst: 'doter.test'
+    before_setup:
+      - 'sleep 5'
+      - 'sleep 5'
+      - 'sleep 5'
+    after_setup:
+      - 'echo "After Setup Test: Step 1"'
+      - 'echo "After Setup Test: Step 2; sleep 1"'
+      - 'echo "After Setup Test: Step 3; sleep 5"'
+      - 'rm ${HOME}/doter.test'

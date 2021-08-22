@@ -26,7 +26,8 @@ alias watch-temp='sudo powermetrics --samplers smc |grep -i "CPU die temperature
 alias ea='conda activate'
 alias ipy=ipython 
 alias dc='docker-compose'
-
+alias e='nvim'
+export EDITOR=nvim
 eval $(thefuck --alias)
 if command -v pyenv 1>/dev/null 2>&1; then
   eval "$(pyenv init --path)"
@@ -35,7 +36,7 @@ fi
 eval "$(starship init zsh)"
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
-eval "$(lua $HOME/z.lua/z.lua --init zsh)"
+eval "$(lua $HOME/github.com/z.lua/z.lua --init zsh)"
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!

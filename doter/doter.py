@@ -9,6 +9,7 @@ from envyaml import EnvYAML
 from os.path import exists, expanduser, abspath, islink
 from os import symlink
 from subprocess import run as run_cmd
+from pathlib import Path
 import time
 
 
@@ -26,6 +27,14 @@ class DoterApp(EventPublisher):
             config_item (DotFileConfig): [description]
         """
         pre_exec_hooks = config_item.get('before_setup', [])
+        src_raw = config_item.get('src', False)
+        dst_raw = config_item.get('dst', False)
+
+        if bool(src_raw) ^ bool(dst_raw):
+            raise KeyError(
+                'src or dst is missing. You must provide all of them or none of them'
+            )
+
         src = expanduser(config_item['src'])
         dst = abspath(config_item['dst'])
         if (exists(src) or
@@ -38,8 +47,7 @@ class DoterApp(EventPublisher):
 
         self._exec_hooks(pre_exec_hooks, 'pre')
 
-        symlink(dst, src)
-
+        self.make_symlink(src, dst)
         self.publish('update_progress', {
             'message':
             f'🔗 Linked {config_item["dst"]} -> {config_item["src"]}'
@@ -59,24 +67,27 @@ class DoterApp(EventPublisher):
             self.publish(
                 'update_progress',
                 {'message': f'🚧 Executing {which}-install hook: ' + cmd})
-            print(cmd)
             self._execute_shell(cmd.split(' '))
 
-    def install(self, *targets):
+    def install(self, dry_run=False, *targets):
         """Install all the dotfiles in the specified by targets,
         default to all specified in the config.yml
 
         Args:
             dry_run (bool, optional): [description]. Defaults to False.
         """
-        print("calling install")
-        print(targets)
+
+        print(dry_run, targets)
         if len(targets) > 0:
             plans = [self._dotfiles[v] for v in targets]
         else:
             plans = self._dotfiles.values()
+
+        if dry_run:
+            self._print_plans(plans)
+            return
+
         self.publish('install_start', len(plans))
-        print(plans)
         for plan in plans:
             self._dispatch_item(plan)
             self.publish(
@@ -103,8 +114,27 @@ class DoterApp(EventPublisher):
 
     def _execute_shell(self, args: list):
         proc = run_cmd(args)
-        print("<<<<<<<<", proc.returncode)
         if proc.returncode != 0:
             raise RuntimeError(
                 f'Error occured when running command"{" ".join(args)}"' +
                 f'with return code {proc.returncode}')
+
+    def make_symlink(self, src: str, dst: str):
+        # mimics the behaviour of mkdir -p
+        p = Path(dst)
+        p.parent.mkdir(parents=True, exist_ok=True)
+        symlink(dst, src)
+
+    def _print_plans(self, plans: list):
+        for i, plan in enumerate(plans):
+            print(f'Item {i+1}')
+            print('=' * 40)
+            print(f"Linking file: {plan['dst']} -> {plan['src']}")
+            print(f"Force Override: {plan.get('force_override', False)}")
+            print("Pre Install Hook:")
+            for hook in plan.get('before_setup'):
+                print(f'\t- {hook}')
+
+            print("Post Install Hook:")
+            for hook in plan.get('after_setup'):
+                print(f'\t- {hook}')

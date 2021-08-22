@@ -91,12 +91,12 @@ download() {
   file="$1"
   url="$2"
 
-  if has curl; then
-    cmd="curl --fail --silent --location --output $file $url"
-  elif has wget; then
+  if has wget; then
     cmd="wget --quiet --output-document=$file $url"
   elif has fetch; then
     cmd="fetch --quiet --output=$file $url"
+  elif has curl; then
+    cmd="curl --fail --silent --location --output $file $url"
   else
     error "No HTTP download program (curl, wget, fetch) found, exiting…"
     return 1

@@ -121,7 +121,7 @@ class DoterApp(EventPublisher):
 
     def make_symlink(self, src: str, dst: str):
         # mimics the behaviour of mkdir -p
-        p = Path(dst)
+        p = Path(src)
         p.parent.mkdir(parents=True, exist_ok=True)
         symlink(dst, src)
 

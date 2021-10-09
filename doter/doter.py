@@ -69,7 +69,7 @@ class DoterApp(EventPublisher):
                 {'message': f'🚧 Executing {which}-install hook: ' + cmd})
             self._execute_shell(cmd.split(' '))
 
-    def install(self, dry_run=False, *targets):
+    def install(self, *targets):
         """Install all the dotfiles in the specified by targets,
         default to all specified in the config.yml
 
@@ -77,15 +77,11 @@ class DoterApp(EventPublisher):
             dry_run (bool, optional): [description]. Defaults to False.
         """
 
-        print(dry_run, targets)
         if len(targets) > 0:
             plans = [self._dotfiles[v] for v in targets]
         else:
             plans = self._dotfiles.values()
 
-        if dry_run:
-            self._print_plans(plans)
-            return
 
         self.publish('install_start', len(plans))
         for plan in plans:

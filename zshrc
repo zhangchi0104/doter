@@ -28,7 +28,9 @@ alias ipy=ipython
 alias dc='docker-compose'
 alias e='nvim'
 export EDITOR=nvim
-eval $(thefuck --alias)
+if [ -e fuck ]; then
+  eval $(thefuck --alias)
+fi
 export PYENV_ROOT="$HOME/.pyenv"
 export PATH="$PYENV_ROOT/bin:$PATH"
 if command -v pyenv 1>/dev/null 2>&1; then
@@ -36,7 +38,7 @@ if command -v pyenv 1>/dev/null 2>&1; then
   eval "$(pyenv init -)"
 fi
 eval "$(starship init zsh)"
-eval "$(lua $HOME/github.com/z.lua/z.lua --init zsh)"
+# eval "$(lua $HOME/github.com/z.lua/z.lua --init zsh)"
 
 # >>> conda initialize >>>
 # !! Contents within this block are managed by 'conda init' !!

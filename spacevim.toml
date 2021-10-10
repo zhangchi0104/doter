@@ -11,7 +11,7 @@
     # set spacevim theme. by default colorscheme layer is not loaded,
     # if you want to use more colorscheme, please load the colorscheme
     # layer
-    colorscheme = "gruvbox"
+    colorscheme = "onedark"
     colorscheme_bg = "dark"
     # Disable guicolors in basic mode, many terminal do not support 24bit
     # true colors
@@ -22,6 +22,7 @@
     statusline_iseparator = "arrow"
     buffer_index_type = 4
     enable_tabline_filetype_icon = true
+    autocomplete_method='coc'
     enable_statusline_mode = false
 
 # Enable autocomplete layer
@@ -36,7 +37,17 @@ default_position = 'top'
 default_height = 30
 
 [[layers]]
-name = 'lang#python'
+name='colorscheme'
 
 [[layers]]
 name = 'lang#typescript'
+typescript_server_path = '/home/alexzhang/.yarn/bin/tsc'
+enable = false
+[[layers]]
+name = 'lang#python'
+format_on_save = true
+enable = false
+
+[[custom_plugins]]
+repo='sheerun/vim-polyglot'
+merged = false

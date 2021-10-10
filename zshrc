@@ -57,3 +57,9 @@ unset __conda_setup
 export NVM_DIR="$HOME/.nvm"
 [ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" 
 export PATH=$HOME/.yarn/bin:$PATH
+
+# WSL Specific settings 
+if [[ -v WSLENV ]]; then
+  alias copy='clip.exe'
+  alias paste='powershell.exe -command "Get-Clipboard"'
+fi

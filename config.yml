@@ -35,18 +35,12 @@ files:
     before_setup:
       - 'git clone https://github.com/gpakosz/.tmux.git ${HOME}/.tmux'
       - 'ln -s -f .tmux/.tmux.conf ${HOME}/.tmux.conf'
-  starship:
-    before_setup:
-      - 'sh ./install_starship.sh'
-  test:
-    src: '~/doter.test'
-    dst: 'doter.test'
-    before_setup:
-      - 'sleep 5'
-      - 'sleep 5'
-      - 'sleep 5'
-    after_setup:
-      - 'echo "After Setup Test: Step 1"'
-      - 'echo "After Setup Test: Step 2; sleep 1"'
-      - 'echo "After Setup Test: Step 3; sleep 5"'
-      - 'rm ${HOME}/doter.test'
+  
+  myspacevim:
+    src: '~/.SpaceVim.d/autoload/myspacevim.vim'
+    dst: 'myspacevim.vim'
+  
+  spacevim:
+    src: '~/.SpaceVim.d/init.toml'
+    dst: 'spacevim.toml'
+    

@@ -1,7 +1,6 @@
-from copy import copy
+from shutil import copy
 from datetime import time
 from doter.reporter import CliReporter
-from doter.lib import dispatch_item
 from typing import List
 from doter.typings import DotFileConfig
 from doter.events import EventPublisher
@@ -69,7 +68,7 @@ class DoterApp(EventPublisher):
                 {'message': f'🚧 Executing {which}-install hook: ' + cmd})
             self._execute_shell(cmd.split(' '))
 
-    def install(self, dry_run=False, *targets):
+    def install(self, *targets):
         """Install all the dotfiles in the specified by targets,
         default to all specified in the config.yml
 
@@ -77,15 +76,11 @@ class DoterApp(EventPublisher):
             dry_run (bool, optional): [description]. Defaults to False.
         """
 
-        print(dry_run, targets)
         if len(targets) > 0:
             plans = [self._dotfiles[v] for v in targets]
         else:
             plans = self._dotfiles.values()
 
-        if dry_run:
-            self._print_plans(plans)
-            return
 
         self.publish('install_start', len(plans))
         for plan in plans:
@@ -99,18 +94,30 @@ class DoterApp(EventPublisher):
             time.sleep(1)
         self.publish('install_complete')
 
-    def backup(self):
+    def backup(self, *args):
         """
         copy all the existing files to the project folder
         """
-        for config in self._dotfiles.values():
-            if not islink(config['src']):
-                copy(expanduser(config['src']), expanduser(config['dst']))
-                print(f'copied {config["src"]} to {config["dst"]}')
-            elif islink(config['src']):
-                print(
-                    f'Skipping backing up {config["src"]}, because it is a symlink'
-                )
+        if len(args) == 0:
+            for config in self._dotfiles.values():
+                self._do_backup(config)
+        else:
+            for fn in args:
+                config = self._dotfiles[fn]
+                self._do_backup(config)
+
+    def _do_backup(self, config):
+        src = expanduser(config['src'])
+        dst = expanduser(config['dst'])
+        if exists('src'):
+            print(f'Skipping {config[src]}, beacuse it does not exist')
+        elif not islink(config['src']):
+            copy(src, dst)
+            print(f'copied {config["src"]} to {config["dst"]}')
+        elif islink(config['src']):
+            print(
+                        f'Skipping backing up {config["src"]}, because it is a symlink'
+                    )
 
     def _execute_shell(self, args: list):
         proc = run_cmd(args)

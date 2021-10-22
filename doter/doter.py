@@ -145,3 +145,11 @@ class DoterApp(EventPublisher):
             print("Post Install Hook:")
             for hook in plan.get('after_setup'):
                 print(f'\t- {hook}')
+    
+    def link(self, name):
+        config = self._dotfiles[name]
+        src = abspath(expanduser(config['src']))
+        dst = abspath(expanduser(config['dst']))
+        self.make_symlink(src, dst)
+
+

@@ -1,107 +1,83 @@
-" ######  BAIC CONFIG 
-set number 		" show line number
+" ############################
+" #                          # 
+" #      COMMOM SETTINGS     #
+" #                          #
+" ############################ 
+set number 		    " show line number
 set wildmenu		" better command line completion 
-set ruler		" display cursor position
+set ruler		    " display cursor position
 set nocompatible	" must have
-set showcmd		" show partial commands in the last line
+set showcmd		    " show partial commands in the last line
 set hlsearch 		" highlight search
 set ignorecase 		" search ignore case
 set smartcase
-syntax on		" syntax highlight
+syntax on		    " syntax highlight
 set autoindent 		" Auto indent
 set smartindent		
-set sw=4		" indent size = 4 
+set sw=4		    " indent size = 4 
 set tabstop=4
 set expandtab
 set backspace=indent,eol,start
 set splitbelow
 set splitright
-" ##### Plugin Manager
-if &compatible
-      set nocompatible               " Be iMproved
-endif
-if (empty($TMUX))
-  if (has("nvim"))
-    let $NVIM_TUI_ENABLE_TRUE_COLOR=1
-  endif
-  if (has("termguicolors"))
-    set termguicolors
-  endif
-endif
-
-let s:dein_path = join([$HOME, has('nvim') ? '.nvim': '.vim'], '/')
-" Required:
-"set runtimepath+=/Users/alexzhang/.vim/bundles/repos/github.com/Shougo/dein.vim
-let &runtimepath .= ','.expand(join([s:dein_path,'/bundles/repos/github.com/Shougo/dein.vim'], ''))
-" Required:
-call dein#begin(join([s:dein_path, '/bundles'], ''))
-" Let dein manage dein
-" Required:
-    call dein#add('Shug/dein.vim')
-    call dein#add('preservim/nerdtree')
-    call dein#add('sbdchd/neoformat', {'on_cmd': ['Neoformat', 'Neoformat!']})
-    call dein#add('Shougo/denite.nvim')
-    call dein#add('vim-airline/vim-airline')
-    call dein#add('liuchengxu/vim-which-key', {'on_cmd': ['WhichKey', 'WhichKey!']}) 
-    call dein#add('neoclide/coc.nvim', {'on_if': 'has("nvim")', 'rev': 'release'})
-    call dein#add('joshdick/onedark.vim')
-    if !has('nvim')
-          call dein#add('roxma/nvim-yarp')
-          call dein#add('roxma/vim-hug-neovim-rpc')
-    endif
-" Required:
-    call dein#config('preservim/nerdtree',  { 
-    \    'on_cmd': ['NERDTreeToggle',
-    \       'NERDTreeCWD'
-    \    ]
-    \}) 
-call dein#end()
-
-" Required:
-filetype plugin indent on
-syntax enable
-colorscheme onedark
-
-"##### Plugin settings 
-
-" <<<<< AIR-LINE 
-let g:airline#extensions#tabline#enabled = 1
-let g:airline#extensions#tabline#buffer_nr_show = 1
-let g:airline_powerline_fonts = 1
-
-" <<<<< NERDTREE
-let g:NERDTreeWinPos = "right"
-
-" <<<<< WHICH-KEY
-let g:which_key_map={}
-let g:which_key_map.f = {
-    \ 'name': '+File',
-    \ 't': [':NERDTreeToggle<CR>', 'Toggle File Manager'] ,
-    \ }
-
-" <<<<< COC.NVIM
+set hidden
 set nobackup
 set nowritebackup
-
-" Give more space for displaying messages.
-set cmdheight=2
-
-" Having longer updatetime (default is 4000 ms = 4 s) leads to noticeable
-" delays and poor user experience.
 set updatetime=300
-
-" Don't pass messages to |ins-completion-menu|.
-set shortmess+=c
+set stal=2          " Always show tabline
+set laststatus=2
+set termguicolors
+if has('nvim')
+  set noshowmode
+endif 
+" Always show signcolumn
 if has("nvim-0.5.0") || has("patch-8.1.1564")
-  " Recently vim can merge signcolumn and number column into one
   set signcolumn=number
 else
   set signcolumn=yes
 endif
 
-" Use tab for trigger completion with characters ahead and navigate.
-" NOTE: Use command ':verbose imap <tab>' to make sure tab is not mapped by
-" other plugin before putting this into your config.
+
+" ###################
+" #                 #
+" #     PLUGINS     #
+" #                 # 
+" ################### 
+call plug#begin(has('nvim') ? stdpath('data') . '/plugged' : '~/.vim/plugged')
+    Plug 'sheerun/vim-polyglot'                                 " Syntax Highlight
+    Plug 'itchyny/lightline.vim'                                " Status Line
+    Plug 'neoclide/coc.nvim', { 'branch': 'release',
+      \ 'do': ':CocInstall coc-json  coc-tsserver coc-pyright'
+      \ }           " Auto Complete
+    " file tree
+    if has('nvim')
+      Plug 'Shougo/defx.nvim', { 'do': ':UpdateRemotePlugins' }
+      Plug 'akinsho/bufferline.nvim' 
+    else
+      Plug 'Shougo/defx.nvim'
+      Plug 'roxma/nvim-yarp'
+      Plug 'roxma/vim-hug-neovim-rpc'
+    endif
+    Plug 'kristijanhusak/defx-icons'
+    Plug 'ryanoasis/vim-devicons'
+    Plug 'joshdick/onedark.vim'                                 " OneDark colorscheme
+call plug#end()
+
+" ###########################
+" #                         #
+" #      COLOR SCHEME       #
+" #                         #
+" ###########################
+colorscheme onedark
+
+
+" ########################
+" #                      # 
+" #     KEY MAPPINGS     # 
+" #                      #
+" ########################
+
+" Uses Tab to trigger compeletion
 inoremap <silent><expr> <TAB>
       \ pumvisible() ? "\<C-n>" :
       \ <SID>check_back_space() ? "\<TAB>" :
@@ -113,155 +89,124 @@ function! s:check_back_space() abort
   return !col || getline('.')[col - 1]  =~# '\s'
 endfunction
 
-" Use <c-space> to trigger completion.
-if has('nvim')
-  inoremap <silent><expr> <c-space> coc#refresh()
-else
-  inoremap <silent><expr> <c-@> coc#refresh()
-endif
+" Set leader to space
+let mapleader = ' '
 
-" Make <CR> auto-select the first completion item and notify coc.nvim to
-" format on enter, <cr> could be remapped by other vim plugin
-inoremap <silent><expr> <cr> pumvisible() ? coc#_select_confirm()
-                              \: "\<C-g>u\<CR>\<c-r>=coc#on_enter()\<CR>"
+" ### Tab maipulation <leader>t ### 
+nnoremap <Leader>tp :tabprevious<CR>
+nnoremap <silent> <Leader>tt :tabnew<CR>
+nnoremap <silent> <Leader>tn :tabnext<CR>
+nnoremap <silent> <Leader>to :tabonly<CR>
+nnoremap <silent> <Leader>td :tabclose<CR>
 
-" Use `[g` and `]g` to navigate diagnostics
-" Use `:CocDiagnostics` to get all diagnostics of current buffer in location list.
-nmap <silent> [g <Plug>(coc-diagnostic-prev)
-nmap <silent> ]g <Plug>(coc-diagnostic-next)
 
-" GoTo code navigation.
-nmap <silent> gd <Plug>(coc-definition)
-nmap <silent> gy <Plug>(coc-type-definition)
-nmap <silent> gi <Plug>(coc-implementation)
-nmap <silent> gr <Plug>(coc-references)
+" ### Window manipulation ### 
+nnoremap <Leader>wh <C-w>h               
+nnoremap <Leader>wj <C-w>j                   
+nnoremap <Leader>wk <C-w>k              
+nnoremap <Leader>wl <C-w>l              
+nnoremap <Leader>wd <C-w>q              
+nnoremap <Leader>wH <C-w>H              
+nnoremap <Leader>wJ <C-w>J              
+nnoremap <Leader>wK <C-w>K              
+nnoremap <Leader>wL <C-w>L              
 
-" Use K to show documentation in preview window.
-nnoremap <silent> K :call <SID>show_documentation()<CR>
+" ### File Tree manipulation ###
+nnoremap <silent> <Leader>ft :Defx -columns=icons:indent:filename:type<CR>
 
-function! s:show_documentation()
-  if (index(['vim','help'], &filetype) >= 0)
-    execute 'h '.expand('<cword>')
-  elseif (coc#rpc#ready())
-    call CocActionAsync('doHover')
-  else
-    execute '!' . &keywordprg . " " . expand('<cword>')
-  endif
+" ### buffer manipulation ### 
+nnoremap <Leader>bl :ls<CR>             
+nnoremap <Leader>bd :bdelete<CR>        
+nnoremap <Leader>bn :bnext<CR>          
+nnoremap <Leader>bp :bprevious<CR>
+
+" ### Defx key mapping ### 
+autocmd FileType defx call s:ConfigKeyMap()
+
+" ### coc key-mapping ###
+nnoremap <silent> <F1>  :CocCommand<CR> 
+nnoremap <silent><expr> <Leader>cf
+  \ CocAction('format') 
+nnoremap <silent> <Leader>ce
+  \ :CocList diagnostics<CR>
+
+function! s:ConfigKeyMap() abort
+  " open selected file in new buffer
+  nnoremap <silent><buffer><expr> <CR>
+    \ defx#do_action('drop')
+  nnoremap <silent><buffer><expr> vs
+    \ defx#do_action('drop', 'vsplit')
+  nnoremap <silent><buffer><expr> s
+    \ defx#do_action('drop', 'split') 
+  nnoremap <silent><buffer><expr> o
+    \ defx#do_action('open_tree', 'toggle')
+  nnoremap <silent><buffer><expr> p
+    \ defx#do_action('cd', ['..']) 
+  nnoremap <silent><buffer><expr> n
+    \ defx#do_action('new_file') 
+  nnoremap <silent><buffer><expr> DD
+    \ defx#do_action('remove')
+  nnoremap <silent><buffer><expr> .. 
+    \ defx#do_action('cd', ['..'])
 endfunction
 
-" Highlight the symbol and its references when holding the cursor.
-autocmd CursorHold * silent call CocActionAsync('highlight')
 
-" Symbol renaming.
-nmap <leader>rn <Plug>(coc-rename)
 
-" Formatting selected code.
-xmap <leader>f  <Plug>(coc-format-selected)
-nmap <leader>f  <Plug>(coc-format-selected)
 
-augroup mygroup
-  autocmd!
-  " Setup formatexpr specified filetype(s).
-  autocmd FileType typescript,json setl formatexpr=CocAction('formatSelected')
-  " Update signature help on jump placeholder.
-  autocmd User CocJumpPlaceholder call CocActionAsync('showSignatureHelp')
-augroup end
+" ############################
+" #                          #
+" #     PLUGIN SETTINGS      #
+" #                          #
+" ############################
+" ### Defx - The File Manager ### 
+call defx#custom#option('_', {
+  \ 'winwidth':   30,
+  \ 'split':      'vertical',
+  \ 'direction':  'botright',
+  \ 'toggle':     1,
+  \ 'resume':     1,
+  \ }) 
 
-" Applying codeAction to the selected region.
-" Example: `<leader>aap` for current paragraph
-xmap <leader>a  <Plug>(coc-codeaction-selected)
-nmap <leader>a  <Plug>(coc-codeaction-selected)
-
-" Remap keys for applying codeAction to the current buffer.
-nmap <leader>ac  <Plug>(coc-codeaction)
-" Apply AutoFix to problem on the current line.
-nmap <leader>qf  <Plug>(coc-fix-current)
-
-" Map function and class text objects
-" NOTE: Requires 'textDocument.documentSymbol' support from the language server.
-xmap if <Plug>(coc-funcobj-i)
-omap if <Plug>(coc-funcobj-i)
-xmap af <Plug>(coc-funcobj-a)
-omap af <Plug>(coc-funcobj-a)
-xmap ic <Plug>(coc-classobj-i)
-omap ic <Plug>(coc-classobj-i)
-xmap ac <Plug>(coc-classobj-a)
-omap ac <Plug>(coc-classobj-a)
-
-" Remap <C-f> and <C-b> for scroll float windows/popups.
-if has('nvim-0.4.0') || has('patch-8.2.0750')
-  nnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
-  nnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
-  inoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(1)\<cr>" : "\<Right>"
-  inoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? "\<c-r>=coc#float#scroll(0)\<cr>" : "\<Left>"
-  vnoremap <silent><nowait><expr> <C-f> coc#float#has_scroll() ? coc#float#scroll(1) : "\<C-f>"
-  vnoremap <silent><nowait><expr> <C-b> coc#float#has_scroll() ? coc#float#scroll(0) : "\<C-b>"
-endif
-
-" Use CTRL-S for selections ranges.
-" Requires 'textDocument/selectionRange' support of language server.
-nmap <silent> <C-s> <Plug>(coc-range-select)
-xmap <silent> <C-s> <Plug>(coc-range-select)
-
-" Add `:Format` command to format current buffer.
-command! -nargs=0 Format :call CocAction('format')
-
-" Add `:Fold` command to fold current buffer.
-command! -nargs=? Fold :call     CocAction('fold', <f-args>)
-
-" Add `:OR` command for organize imports of the current buffer.
-command! -nargs=0 OR   :call     CocAction('runCommand', 'editor.action.organizeImport')
-
-" Add (Neo)Vim's native statusline support.
-" NOTE: Please see `:h coc-status` for integrations with external plugins that
-" provide custom statusline: lightline.vim, vim-airline.
-set statusline^=%{coc#status()}%{get(b:,'coc_current_function','')}
-
-" Mappings for CoCList
-" Show all diagnostics.
-nnoremap <silent><nowait> <space>a  :<C-u>CocList diagnostics<cr>
-" Manage extensions.
-nnoremap <silent><nowait> <space>e  :<C-u>CocList extensions<cr>
-" Show commands.
-nnoremap <silent><nowait> <space>c  :<C-u>CocList commands<cr>
-" Find symbol of current document.
-nnoremap <silent><nowait> <space>o  :<C-u>CocList outline<cr>
-" Search workspace symbols.
-nnoremap <silent><nowait> <space>s  :<C-u>CocList -I symbols<cr>
-" Do default action for next item.
-nnoremap <silent><nowait> <space>j  :<C-u>CocNext<CR>
-" Do default action for previous item.
-nnoremap <silent><nowait> <space>k  :<C-u>CocPrev<CR>
-" Resume latest coc list.
-nnoremap <silent><nowait> <space>p  :<C-u>CocListResume<CR>
-"###### Key Mapping
-" NERD TREE
-nnoremap <Space>ft :NERDTreeToggle<CR>
-" <<<<< Which Key
-nnoremap <silent><Space> :WhichKey '<Space>'<CR>
-" <<<<< Denite
-autocmd FileType denite call s:denite_my_settings()
-function! s:denite_my_settings() abort
-    nnoremap <silent><buffer><expr> <CR>
-    \ denite#do_map('do_action')
-    nnoremap <silent><buffer><expr> d
-    \ denite#do_map('do_action', 'delete')
-    nnoremap <silent><buffer><expr> p
-    \ denite#do_map('do_action', 'preview')
-    nnoremap <silent><buffer><expr> q
-    \ denite#do_map('quit')
-    nnoremap <silent><buffer><expr> i
-    \ denite#do_map('open_filter_buffer')
-    nnoremap <silent><buffer><expr> <Space>
-    \ denite#do_map('toggle_select').'j'
+" ### Lightline - Status ###
+let g:lightline = {
+  \ 'colorshceme': 'onedark',
+  \ 'active': {
+  \   'left': [ ['mode', 'paste'],
+  \             ['bufnum'],  
+  \             ['iconrelpath', 'modified'] ]
+  \ },
+  \ 'inactive': {
+  \   'left': [ ['bufnum'],
+  \             ['iconrelpath',  'modified'] ]
+  \ },
+  \ 'separator': { 'left': "\ue0b0", 'right': "\ue0b2" },
+  \ 'subseparator': { 'left': "\ue0b1", 'right': "\ue0b3" },
+  \ 'component_function': {
+  \   'filetype': 'MyFiletype',
+  \   'fileformat': 'MyFileformat',
+  \ },
+  \ 'component': {
+  \   'iconrelpath': '%{WebDevIconsGetFileTypeSymbol()} %f',
+  \ },
+  \ 'tab': {
+  \   'active': [ 'tabnum', 'iconfilename', 'modified' ],
+  \   'inactive': [ 'tabnum', 'iconfilename', 'modified' ]
+  \ },
+  \ 'tabline': {
+  \   'right': []
+  \ },
+  \ 'tab_component_function': {
+  \   'iconfilename': 'IconFileName'
+  \ }
+  \ }
+function! MyFiletype()
+  return winwidth(0) > 70 ? (strlen(&filetype) ? &filetype . ' ' . WebDevIconsGetFileTypeSymbol() : 'no ft') : ''
 endfunction
-" <<<<< MISC
-nnoremap <silent><leader>1 :buffer 1 <CR>
-nnoremap <silent><leader>2 :buffer 2 <CR>
-nnoremap <silent><leader>3 :buffer 3 <CR>
-nnoremap <silent><leader>4 :buffer 4 <CR>
-nnoremap <silent><leader>5 :buffer 5 <CR>
-nnoremap <silent><leader>6 :buffer 6 <CR>
-nnoremap <silent><leader>7 :buffer 7 <CR>
-nnoremap <silent><leader>8 :buffer 8 <CR>
-nnoremap <silent><leader>9 :buffer 9 <CR>
+  
+function! MyFileformat()
+  return winwidth(0) > 70 ? (&fileformat . ' ' . WebDevIconsGetFileFormatSymbol()) : ''
+endfunction
+
+function! IconFileName(n)
+  return WebDevIconsGetFileTypeSymbol(). ' ' . lightline#tab#filename(a:n)
+endfunction 

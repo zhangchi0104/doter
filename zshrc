@@ -27,6 +27,8 @@ alias ea='conda activate'
 alias ipy=ipython 
 alias dc='docker-compose'
 alias e='nvim'
+alias va='source ./venv/bin/activate'
+alias vda='deactivate'
 export EDITOR=nvim
 if [ -e fuck ]; then
   eval $(thefuck --alias)

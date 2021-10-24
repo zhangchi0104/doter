@@ -3,18 +3,18 @@
 " #      COMMOM SETTINGS     #
 " #                          #
 " ############################ 
-set number 		    " show line number
-set wildmenu		" better command line completion 
-set ruler		    " display cursor position
-set nocompatible	" must have
-set showcmd		    " show partial commands in the last line
-set hlsearch 		" highlight search
-set ignorecase 		" search ignore case
+set number relativenumber 		    " show line number
+set wildmenu		                " better command line completion 
+set ruler                           " display cursor position
+set nocompatible                    " must have
+set showcmd                         " show partial commands in the last line
+set hlsearch                        " highlight search
+set ignorecase                      " search ignore case
 set smartcase
-syntax on		    " syntax highlight
-set autoindent 		" Auto indent
-set smartindent		
-set sw=4		    " indent size = 4 
+syntax on                           " syntax highlight
+set autoindent                      " Auto indent
+set smartindent           
+set sw=4                            " indent size = 4 
 set tabstop=4
 set expandtab
 set backspace=indent,eol,start
@@ -36,8 +36,7 @@ if has("nvim-0.5.0") || has("patch-8.1.1564")
 else
   set signcolumn=yes
 endif
-
-
+let g:netrw_banner=0
 " ###################
 " #                 #
 " #     PLUGINS     #
@@ -46,6 +45,8 @@ endif
 call plug#begin(has('nvim') ? stdpath('data') . '/plugged' : '~/.vim/plugged')
     Plug 'sheerun/vim-polyglot'                                 " Syntax Highlight
     Plug 'itchyny/lightline.vim'                                " Status Line
+    Plug 'tpope/vim-fugitive'
+    Plug 'sbdchd/neoformat' 
     Plug 'neoclide/coc.nvim', { 'branch': 'release',
       \ 'do': ':CocInstall coc-json  coc-tsserver coc-pyright'
       \ }           " Auto Complete
@@ -59,6 +60,7 @@ call plug#begin(has('nvim') ? stdpath('data') . '/plugged' : '~/.vim/plugged')
       Plug 'roxma/vim-hug-neovim-rpc'
     endif
     Plug 'kristijanhusak/defx-icons'
+    Plug 'mhinz/vim-startify'
     Plug 'ryanoasis/vim-devicons'
     Plug 'joshdick/onedark.vim'                                 " OneDark colorscheme
 call plug#end()
@@ -94,7 +96,7 @@ endfunction
 let mapleader = ' '
 
 " ### Tab maipulation <leader>t ### 
-nnoremap <Leader>tp :tabprevious<CR>
+nnoremap <silent> <Leader>tp :tabprevious<CR>
 nnoremap <silent> <Leader>tt :tabnew<CR>
 nnoremap <silent> <Leader>tn :tabnext<CR>
 nnoremap <silent> <Leader>to :tabonly<CR>
@@ -123,18 +125,13 @@ nnoremap <Leader>bp :bprevious<CR>
 
 " ### Defx key mapping ### 
 autocmd FileType defx call s:ConfigKeyMap()
-
-" ### coc key-mapping ###
-nnoremap <silent> <F1>  :CocCommand<CR> 
-nnoremap <silent><expr> <Leader>cf
-  \ CocAction('format') 
-nnoremap <silent> <Leader>ce
-  \ :CocList diagnostics<CR>
-
+autocmd VimEnter * Defx -no-focus 
 function! s:ConfigKeyMap() abort
   " open selected file in new buffer
   nnoremap <silent><buffer><expr> <CR>
-    \ defx#do_action('drop')
+    \ bufname('$') == '[defx] default-0' && !strlen(bufname(1))
+    \ ? defx#do_action('drop')
+    \ : defx#do_action('drop', 'tabnew')
   nnoremap <silent><buffer><expr> vs
     \ defx#do_action('drop', 'vsplit')
   nnoremap <silent><buffer><expr> s
@@ -149,14 +146,42 @@ function! s:ConfigKeyMap() abort
     \ defx#do_action('remove')
   nnoremap <silent><buffer><expr> .. 
     \ defx#do_action('cd', ['..'])
+  nnoremap <silent><buffer><expr> cd
+    \ defx#do_action('change_vim_cwd')
 endfunction
 
 
+" ### coc key-mapping ###
+nnoremap <silent> <F1>  :CocCommand<CR> 
+nnoremap <silent> <Leader>ce
+  \ :CocList diagnostics<CR>
+nmap <silent> gd <Plug>(coc-definition)
+nmap <silent> gy <Plug>(coc-type-definition)
+nmap <silent> gi <Plug>(coc-implementation)
+nmap <silent> gr <Plug>(coc-references)
+nmap <silent> <Leader>cr <Plug>(coc-rename)
+" Use K to show documentation in preview window.
+nnoremap <silent> K :call <SID>show_documentation()<CR>
+
+function! s:show_documentation()
+  if (index(['vim','help'], &filetype) >= 0)
+    execute 'h '.expand('<cword>')
+  elseif (coc#rpc#ready())
+    call CocActionAsync('doHover')
+  else
+    execute '!' . &keywordprg . " " . expand('<cword>')
+  endif
+endfunction
+
+" ### Neoformat key mapping ###
+nnoremap <Leader>bf :Neoformat<CR>
 " ############################
 " #                          #
 " #     PLUGIN SETTINGS      #
 " #                          #
 " ############################
+
+
 " ### Defx - The File Manager ### 
 call defx#custom#option('_', {
   \ 'winwidth':   30,
@@ -171,8 +196,11 @@ let g:lightline = {
   \ 'colorshceme': 'onedark',
   \ 'active': {
   \   'left': [ ['mode', 'paste'],
-  \             ['bufnum'],  
-  \             ['iconrelpath', 'modified'] ]
+  \             ['bufnum'],
+  \             ['git_branch', 'iconrelpath', 'modified'] ],
+  \   'right': [ ['lineinfo'],
+  \              ['percent'],
+  \              ['fileformat', 'fileencoding'] ]
   \ },
   \ 'inactive': {
   \   'left': [ ['bufnum'],
@@ -186,6 +214,7 @@ let g:lightline = {
   \ },
   \ 'component': {
   \   'iconrelpath': '%{WebDevIconsGetFileTypeSymbol()} %f',
+  \   'git_branch': "\ue725 %{FugitiveHead()}",
   \ },
   \ 'tab': {
   \   'active': [ 'tabnum', 'iconfilename', 'modified' ],
@@ -210,6 +239,11 @@ function! IconFileName(n)
   return WebDevIconsGetFileTypeSymbol(). ' ' . lightline#tab#filename(a:n)
 endfunction 
 
+" ### Neoformat ###
+augroup neoformat
+  autocmd!
+  autocmd BufWritePre * undojoin | Neoformat
+augroup END
 " #####################################
 " #                                   # 
 " #     LANGUAGE SPECIFIC SETTING     #

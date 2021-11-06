@@ -17,13 +17,19 @@ files:
     src: '~/.vimrc'
     dst: 'vimrc'
     before_setup:
-      - 'sh ./installer.sh ~/.vim/bundles'
+      - 'curl -fLo ~/.vim/autoload/plug.vim --create-dirs 
+        https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+    after_setup:
+      - vim +"PlugInstall --sync" +qa
+
   nvim:
     src: '~/.config/nvim/init.vim'
     dst: nvim_init.vim
     before_setup:
-      - 'git clone https://github.com/microsoft/python-type-stubs.git ~/.nvim/typings'
-      - 'sh ./installer.sh ~/.nvim/bundles'
+      - "sh -c 'curl -fLo ~/.local/share/nvim/site/autoload/plug.vim --create-dirs 
+       https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'"
+      - nvim +"PlugInstall --sync" +qa
+
   zsh:
     src: '~/.zshrc'
     dst: 'zshrc'

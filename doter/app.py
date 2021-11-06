@@ -63,12 +63,19 @@ class DoterApp(object):
         abs_dst = os.path.join(self._dotfiles_dir, os.path.expanduser(dst))
         abs_dst = os.path.abspath(abs_dst)
         abs_src = Path(abs_src)
-        if force and Path(abs_src).is_symlink():
+        print(abs_src.is_symlink())
+        print(abs_src.is_file())
+        print("locals")
+        print(locals())
+        if force and abs_src.is_symlink():
             abs_src.unlink()
-        elif force and Path(abs_src).is_file():
+            print(f"Unlinking {abs_src}")
+        elif force and abs_src.is_file():
             os.remove(abs_src)
-        elif not force:
-            return
+            print(f"Removing {abs_src}")
+        elif force and abs_src.is_dir():
+            os.removedirs(abs_src)
+        abs_src.parent.mkdir(parents=True, exist_ok=True)
         os.symlink(src=abs_dst, dst=abs_src)
     
     async def link(self, *args, force=False):

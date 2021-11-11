@@ -45,7 +45,12 @@ let g:netrw_banner=0
 " #                 # 
 " ################### 
 call plug#begin(has('nvim') ? stdpath('data') . '/plugged' : '~/.vim/plugged')
-    Plug 'sheerun/vim-polyglot'                                 " Syntax Highlight
+    if has('nvim-0.6.0')
+      Plug 'nvim-treesitter/nvim-treesitter', {'do': ':TSUpdate'}
+      Plug 'github/copilot.vim', {'do': 'Copilot setup'}
+    else
+      Plug 'sheerun/vim-polyglot'
+    endif 
     Plug 'itchyny/lightline.vim'                                " Status Line
     Plug 'tpope/vim-fugitive'
     Plug 'sbdchd/neoformat' 

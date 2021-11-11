@@ -65,3 +65,7 @@ if [[ -v WSLENV ]]; then
   alias copy='clip.exe'
   alias paste='powershell.exe -command "Get-Clipboard"'
 fi
+
+if [ -e nvim-dev ]; then
+    alias nvim='nvim-dev'
+fi

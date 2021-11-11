@@ -10,5 +10,5 @@ class Command:
         raise NotImplementedError()
 
     @property
-    def dotfiles(self):
+    def _dotfiles(self):
         return self._config['files']

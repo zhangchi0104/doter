@@ -14,10 +14,10 @@ class Install(Command):
 
     async def __call__(self, *args, force=False):
         print(force, args)
-        config_items = args if len(args) > 0 else self.dotfiles.keys()
+        config_items = args if len(args) > 0 else self._dotfiles.keys()
         try:
             await asyncio.gather(*[
-                self._do_isntall(item, self.dotfiles[item], force)
+                self._do_isntall(item, self._dotfiles[item], force)
                 for item in config_items
             ])
         except RuntimeError as e:

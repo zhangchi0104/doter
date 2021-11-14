@@ -315,6 +315,5 @@ augroup END
 
 " ### Go ###
 autocmd BufWritePre *.go :silent call CocAction('runCommand', 'editor.action.organizeImport')
-set ts=4
-set sts=4
-set sw=4
+
+source ~/.vim/config/indent.vim

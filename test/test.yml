@@ -10,3 +10,9 @@ files:
     dst: doter_test2
     before_setup:
       - "sleep 2"
+
+  test_dir:
+    src: ~/doter_test_dir
+    dst: doter_test_dir
+    before_setup:
+      - sleep 2

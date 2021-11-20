@@ -48,3 +48,19 @@ async def test_install_concurrent(app_with_both):
     end = time.time()
     print(end - start)
     assert end - start - 2 < 0.1
+
+@pytest.mark.asyncio
+async  def test_install_dir(app):
+    src_dir_path = Path('~/doter_test_dir').expanduser()
+    dst_dir_path = Path('./dotfiles/doter_test_dir')
+    dst_dir_path.mkdir(exist_ok=True)
+    Path(dst_dir_path / 'test_item').touch(exist_ok=True)
+    await app.install('test_dir')
+    res = src_dir_path.is_symlink() and src_dir_path.exists()
+    if res == True:
+        os.unlink(src_dir_path)
+    os.remove(dst_dir_path / 'test_item') 
+    os.removedirs(dst_dir_path)
+    assert res == True
+    
+

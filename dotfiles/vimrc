@@ -317,3 +317,5 @@ augroup END
 autocmd BufWritePre *.go :silent call CocAction('runCommand', 'editor.action.organizeImport')
 
 source ~/.vim/config/indent.vim
+
+source ~/.vim/config/shell.vim

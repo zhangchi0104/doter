@@ -13,7 +13,6 @@ class Link(Command):
         super().__init__(config, dotfiles_dir)
 
     async def __call__(self, *args, force=False):
-        print(force, args)
         config_items = args if len(args) > 0 else self._config['files'].keys()
         try:
             await asyncio.gather(*[
@@ -22,7 +21,7 @@ class Link(Command):
             ])
         except RuntimeError as e:
             print(e)
-            exit(1)
+            e3it(1)
 
     async def _do_link(self, key: str, config: ConfigItem, force: bool):
         src = config.get('src', None)

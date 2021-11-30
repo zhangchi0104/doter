@@ -365,13 +365,3 @@ bind | split-window -h
 bind - split-window -v
 #
 set -sg repeat-time 300
-# ---- PLUGIN MANAGER ----
-set -g @tpm_plugins  '				\
-  tmux-plugins/tpm					\
-  tmux-plugins/tmux-sensible		\
-  tmux-plugins/tmux-resurrect       \
-  tmux-plugins/tmux-continuum		\
-'
-
-run '~/.tmux/plugins/tpm/tpm'
-

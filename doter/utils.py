@@ -48,10 +48,6 @@ def link(dotfiles_dir: Union[str, Path], src: str, dst: str, force: bool):
     abs_dst = os.path.join(dotfiles_dir, os.path.expanduser(dst))
     abs_dst = os.path.abspath(abs_dst)
     abs_src = Path(abs_src)
-    print(abs_src.is_symlink())
-    print(abs_src.is_file())
-    print("locals")
-    print(locals())
     if force and abs_src.is_symlink():
         abs_src.unlink()
         print(f"Unlinking {abs_src}")
@@ -62,3 +58,17 @@ def link(dotfiles_dir: Union[str, Path], src: str, dst: str, force: bool):
         os.removedirs(abs_src)
     abs_src.parent.mkdir(parents=True, exist_ok=True)
     os.symlink(src=abs_dst, dst=abs_src)
+
+
+async def sh(cmd: str):
+    """
+    sh executes a shell command
+    """
+    proc = await asyncio.create_subprocess_shell(
+        cmd,
+        stdout=asyncio.subprocess.PIPE,
+        stderr=asyncio.subprocess.PIPE,
+        shell=True)
+    stdout, stderr = await proc.communicate()
+    retcode = proc.returncode
+    return retcode, stdout, stderr

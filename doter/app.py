@@ -12,7 +12,7 @@ EXCLUDED_FILES = [
 
 class DoterApp(object):
     def __init__(self, config='./config.yaml', dotfiles_dir='./dotfiles'):
-        self._config = envyaml.EnvYAML(config)
+        self._config_path = config
         self._dotfiles_dir = Path(dotfiles_dir)
         self._resolve_modules()
 
@@ -25,7 +25,8 @@ class DoterApp(object):
                 class_name = module.__CLASS_NAME__
                 cmd_name = module.__COMMAND_NAME__
                 cls = getattr(module, class_name)
-                setattr(self, cmd_name, cls(self._config, self._dotfiles_dir))
+                setattr(self, cmd_name,
+                        cls(self._config_path, self._dotfiles_dir))
 
 
 if __name__ == '__main__':

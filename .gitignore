@@ -1,5 +1,6 @@
 # created by virtualenv automatically
 __pycache__/
+.coverage
 .vscode
 venv
 .python-version

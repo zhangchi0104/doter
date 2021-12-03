@@ -42,3 +42,7 @@ files:
     before_setup:
       - "git clone https://github.com/gpakosz/.tmux.git ~/.tmux"
       - "ln -s -f .tmux/.tmux.conf $HOME/.tmux.conf"
+
+  vimrc.d:
+    src: "~/.vimrc.d"
+    dst: vimrc.d

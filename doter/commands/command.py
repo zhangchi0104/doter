@@ -1,6 +1,5 @@
 from pathlib import Path
 from typing import Dict
-from envyaml import EnvYAML
 import yaml
 from ..tpyings import ConfigItem
 

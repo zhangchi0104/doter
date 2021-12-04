@@ -4,18 +4,18 @@ from pathlib import Path
 import os
 
 test1_src = Path('~/doter_test1').expanduser().absolute()
-test1_dst = Path('./dotfiles/doter_test1').absolute()
+test1_dst = Path('./test/test_files/doter_test1').absolute()
 
 test2_src = Path('~/doter_test2').expanduser().absolute()
-test2_dst = Path('./dotfiles/doter_test2').absolute()
+test2_dst = Path('./test/test_files/doter_test2').absolute()
 
 test_dir_src = Path('~/doter_test_dir').expanduser().absolute()
-test_dir_dst = Path('./dotfiles/doter_test_dir').absolute()
+test_dir_dst = Path('./tests/test_files/doter_test_dir').absolute()
 
 
 @pytest.fixture
 def app():
-    yield DoterApp(config='./test/test.yml')
+    yield DoterApp(config='./test/test.yml', dotfiles_dir='./test/test_files')
 
 
 @pytest.mark.asyncio

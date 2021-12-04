@@ -4,15 +4,15 @@ from doter.app import DoterApp
 from pathlib import Path
 
 test1_src = Path('~/doter_test1').expanduser().absolute()
-test1_dst = Path('./dotfiles/doter_test1').absolute()
+test1_dst = Path('./test/doter_test1').absolute()
 
 test2_src = Path('~/doter_test2').expanduser().absolute()
-test2_dst = Path('./dotfiles/doter_test2').absolute()
+test2_dst = Path('./test/doter_test2').absolute()
 
 
 @pytest.fixture
 def app():
-    yield DoterApp('./test/test.yml')
+    yield DoterApp(config='./test/test.yml', dotfiles_dir='./test')
 
 
 @pytest.fixture
@@ -43,14 +43,14 @@ async def test_install_single(app_with_test1):
 @pytest.mark.asyncio
 async  def test_install_dir(app):
     src_dir_path = Path('~/doter_test_dir').expanduser()
-    dst_dir_path = Path('./dotfiles/doter_test_dir')
+    dst_dir_path = Path('./test/doter_test_dir')
     dst_dir_path.mkdir(exist_ok=True)
     Path(dst_dir_path / 'test_item').touch(exist_ok=True)
     await app.link('test_dir')
     res = src_dir_path.is_symlink() and src_dir_path.exists()
     if res == True:
         os.unlink(src_dir_path)
-    os.remove(dst_dir_path / 'test_item') 
+    os.remove(dst_dir_path / 'test_item')
     os.removedirs(dst_dir_path)
     assert res == True
     

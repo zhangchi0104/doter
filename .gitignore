@@ -1,4 +1,6 @@
 # created by virtualenv automatically
+.coverage
+dist/
 __pycache__/
 .vscode
 venv

@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "doter"
+version = "0.1.0"
+description = "A dotfile manager"
+authors = ["Alex Zhang <zhangchi0104@live.com>"]
+license = "MIT"
+
+[tool.poetry.dependencies]
+python = "^3.8"
+PyYAML = "^6.0"
+fire = "^0.4.0"
+
+[tool.poetry.dev-dependencies]
+pytest-asyncio = "^0.16.0"
+pytest = "6.2.5"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+doter = "doter.__main__:main"

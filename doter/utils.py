@@ -1,10 +1,14 @@
-from typing import List, Union
+from typing import List, Union, Type
+from types import TracebackType
+from shutil import get_terminal_size
 import os
 import asyncio
 from pathlib import Path
+from rich.traceback import Traceback
+import signal
 
 
-async def run_hooks(hooks: List[str]):
+async def run_hooks(hooks: List[str], event_bus=None, name=None):
     """
     run_hooks execute hooks through the system shell
     asyncriously
@@ -19,13 +23,24 @@ async def run_hooks(hooks: List[str]):
     home_dir = os.getenv('HOME')
     if home_dir is None:
         raise RuntimeError('environment variable $HOME is not set')
-    print(hooks)
     for cmd in hooks:
+        if name is not None and event_bus is not None:
+            await event_bus.publish(
+                'install/update',
+                name=name,
+                description=f"Executing hook: {cmd}",
+            )
         proc = await asyncio.create_subprocess_shell(
             cmd.replace('~', home_dir),
             stdout=asyncio.subprocess.DEVNULL,
             stderr=asyncio.subprocess.PIPE,
             shell=True)
+
+        async def sigint_handler():
+            proc.send_signal(signal.SIGINT)
+            await proc.wait()
+
+        event_bus.subscribe('install/sigint', sigint_handler)
         _, stderr = await proc.communicate()
         retcode = proc.returncode
         if retcode != 0:
@@ -72,3 +87,19 @@ async def sh(cmd: str):
     stdout, stderr = await proc.communicate()
     retcode = proc.returncode
     return retcode, stdout, stderr
+
+
+def create_traceback(
+    exc_type: Type[BaseException],
+    exc_val: BaseException,
+    traceback: TracebackType | None,
+):
+    width, _ = get_terminal_size((80, 20))
+    return Traceback.from_exception(
+        exc_type,
+        exc_val,
+        traceback,
+        width=width,
+        word_wrap=True,
+        show_locals=True,
+    )

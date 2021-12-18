@@ -9,8 +9,8 @@ __COMMAND_NAME__ = "clean"
 
 
 class Clean(Command):
-    def __init__(self, dotfiles, dotfiles_dir):
-        super().__init__(dotfiles, dotfiles_dir)
+    def __init__(self, dotfiles, dotfiles_dir, event_bus):
+        super().__init__(dotfiles, dotfiles_dir, event_bus)
 
     async def __call__(self, *args):
         if len(args) == 0:

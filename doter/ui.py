@@ -3,6 +3,12 @@ from .eventbus import EventBus
 
 
 class RichUI(object):
+    """ RichUI
+
+    A fancy command line progress display, it listens to
+    events from the event bus
+
+    """
     STATUS_EMOJIS = {
         "completed": ":white_check_mark:",
         "error": ":cross_mark:",
@@ -10,7 +16,16 @@ class RichUI(object):
     }
 
     def __init__(self, event_bus: EventBus):
-        self._ui_context = None
+        """
+        Args:
+            event_bus (EventBus): the event bus to be subscribed
+
+        Attributes:
+            _progress: (Rich.progress.Progress): the progress display
+            _task_dict: the mapping of task name to task_id
+
+        
+        """
         self._task_dict = dict()
         self._progress = Progress(
             TextColumn("{task.fields[status]}"),  # symbol Column
@@ -24,9 +39,16 @@ class RichUI(object):
         event_bus.subscribe('install/error', self._on_error)
 
     async def _on_error(self, **kwargs):
+        """
+        Callback function when an error occured
+        """
+        # extract information from context
         name = kwargs['name']
         task_id = self._task_dict[name]
         tb = kwargs['traceback']
+
+        # Update progress to display error
+        # and display traceback
         self._progress.update(
             task_id,
             description="Failed",
@@ -35,9 +57,14 @@ class RichUI(object):
         self._progress.console.print(tb)
 
     async def _on_completed(self, **params):
+        """
+        Callback when a task is completed
+        """
+        # extract variable from context
         name = params['name']
         description = f'Installation of {name} completed'
         task_id = self._task_dict[name]
+        # Update the progress bar to display completion message
         self._progress.update(
             task_id,
             description=description,
@@ -46,10 +73,15 @@ class RichUI(object):
         )
 
     async def _on_init(self, **params):
+        """
+        Callback for a task initialised
+        """
+        # extract info 
         name = params['name']
         description = params['description']
         total = params['total']
 
+        # Update the progress bar
         task_id = self._progress.add_task(
             description,
             total=total,

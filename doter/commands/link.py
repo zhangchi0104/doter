@@ -9,8 +9,8 @@ __COMMAND_NAME__ = "link"
 
 
 class Link(Command):
-    def __init__(self, config, dotfiles_dir):
-        super().__init__(config, dotfiles_dir)
+    def __init__(self, config, dotfiles_dir, event_bus):
+        super().__init__(config, dotfiles_dir, event_bus)
 
     async def __call__(self, *args, force=False):
         config_items = args if len(args) > 0 else self._config['files'].keys()

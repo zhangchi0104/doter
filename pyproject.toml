@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "doter"
-version = "0.1.0"
+version = "0.1.1"
 description = "A dotfile manager"
 authors = ["Alex Zhang <zhangchi0104@live.com>"]
 license = "MIT"

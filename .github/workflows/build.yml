@@ -11,7 +11,7 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
     inputs:
-      flutter_version:
+      release_version:
         description: 'Relaase Version'
         required: true
 
@@ -46,6 +46,15 @@ jobs:
         run: python3 -m poetry build
       
       - name: Add to release
+        if: ${{  github.event.inputs.release_version }} 
+        uses: ncipollo/release-action@v1
+        with:
+          name: ${{ github.event.inputs.release_version }}
+          artifacts: "dist/*"
+          token: ${{ secrets.GH_ACCESS_TOKEN }}
+      
+      - name: Add to release by Tag
+        if: ${{ stratsWith(github.ref, "ref/tags/v") }}
         uses: ncipollo/release-action@v1
         with:
           artifacts: "dist/*"

@@ -22,6 +22,15 @@ class Install(Command):
             ])
         except KeyboardInterrupt:
             await self._event_bus.publish('install/sigint')
+        except KeyError as e:
+            traceback = create_traceback(KeyError, e, e.__traceback__)
+            await self._event_bus.publish(
+                'install/error',
+                name=None,
+                description=f'Key does not exist: {str(e)}',
+                traceback=traceback,
+            )
+            return
 
     async def _do_isntall(self, key: str, config: ConfigItem, force: bool):
         src = config.get('src', None)

@@ -44,16 +44,17 @@ class RichUI(object):
         """
         # extract information from context
         name = kwargs['name']
-        task_id = self._task_dict[name]
+        task_id = self._task_dict.get(name, None)
         tb = kwargs['traceback']
 
         # Update progress to display error
         # and display traceback
-        self._progress.update(
-            task_id,
-            description="Failed",
-            status=self.STATUS_EMOJIS['error'],
-        )
+        if task_id:
+            self._progress.update(
+                task_id,
+                description="Failed",
+                status=self.STATUS_EMOJIS['error'],
+            )
         self._progress.console.print(tb)
 
     async def _on_completed(self, **params):
@@ -76,7 +77,7 @@ class RichUI(object):
         """
         Callback for a task initialised
         """
-        # extract info 
+        # extract info
         name = params['name']
         description = params['description']
         total = params['total']

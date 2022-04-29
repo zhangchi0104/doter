@@ -46,11 +46,11 @@ jobs:
         run: python3 -m poetry build
       
       - name: Add to release
-        if: ${{  github.event.inputs.release_version }} 
+        if: ${{ github.event.inputs.release_version }} 
         uses: ncipollo/release-action@v1
         with:
           name: ${{ github.event.inputs.release_version }}
-          tag: ${{ format("v{0}", github.event.inputs.release_version )}}
+          tag: ${{ format('v{0}', github.event.inputs.release_version )}}
           artifacts: "dist/*"
           token: ${{ secrets.GH_ACCESS_TOKEN }}
       

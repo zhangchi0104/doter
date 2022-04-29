@@ -54,7 +54,7 @@ jobs:
           token: ${{ secrets.GH_ACCESS_TOKEN }}
       
       - name: Add to release by Tag
-        if: startsWith(github.ref, "ref/tags/v")
+        if: startsWith(github.ref, 'ref/tags/v')
         uses: ncipollo/release-action@v1
         with:
           artifacts: "dist/*"

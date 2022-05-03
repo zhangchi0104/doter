@@ -89,11 +89,8 @@ async def sh(cmd: str):
     return retcode, stdout, stderr
 
 
-def create_traceback(
-    exc_type: Type[BaseException],
-    exec_val: BaseException,
-    traceback: Union[TracebackType, None]
-):
+def create_traceback(exc_type: Type[BaseException], exec_val: BaseException,
+                     traceback: Union[TracebackType, None]):
     """
     create_traceback creates an traceback object in `rich`
     from an exception
@@ -106,7 +103,7 @@ def create_traceback(
     Returns
         Traceback (rich.traceback.Traceback): the printable traceback
 
-    """ 
+    """
     width, _ = get_terminal_size((80, 20))
     return Traceback.from_exception(
         exc_type,

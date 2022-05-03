@@ -1,5 +1,8 @@
 from rich.progress import Progress, TextColumn, SpinnerColumn
+from rich.console import Console
 from .eventbus import EventBus
+
+import doter.events as events
 
 
 class RichUI(object):
@@ -33,12 +36,15 @@ class RichUI(object):
             TextColumn("{task.fields[name]}"),  # task name column
             TextColumn("({task.completed}/{task.total})"),
             TextColumn("{task.description}"))
-        event_bus.subscribe('install/init', self._on_init)
-        event_bus.subscribe('install/update', self._on_update)
-        event_bus.subscribe('install/done', self._on_completed)
-        event_bus.subscribe('install/error', self._on_error)
+        self._console = Console(record=True)
+        event_bus.subscribe(events.TASK_INIT, self._on_install_init)
+        event_bus.subscribe(events.TASK_UPDATE, self._on_install_update)
+        event_bus.subscribe(events.TASK_DONE, self._on_install_completed)
+        event_bus.subscribe(events.TASK_ERROR, self._on_install_error)
+        event_bus.subscribe(events.DONE, self._on_complete)
+        event_bus.subscribe(events.ERROR, self._on_error)
 
-    async def _on_error(self, **kwargs):
+    async def _on_install_error(self, **kwargs):
         """
         Callback function when an error occured
         """
@@ -57,7 +63,7 @@ class RichUI(object):
             )
         self._progress.console.print(tb)
 
-    async def _on_completed(self, **params):
+    async def _on_install_completed(self, **params):
         """
         Callback when a task is completed
         """
@@ -73,7 +79,7 @@ class RichUI(object):
             advance=1,
         )
 
-    async def _on_init(self, **params):
+    async def _on_install_init(self, **params):
         """
         Callback for a task initialised
         """
@@ -91,7 +97,7 @@ class RichUI(object):
         )
         self._task_dict[name] = task_id
 
-    async def _on_update(self, **params):
+    async def _on_install_update(self, **params):
         name = params['name']
         description = params['description']
         task_id = self._task_dict[name]
@@ -109,6 +115,17 @@ class RichUI(object):
                 description="Cancelled",
                 status=self.STATUS_EMOJIS['error'],
             )
+
+    async def _on_complete(self, **kwargs):
+        self._console.print(self.STATUS_EMOJIS['completed'] + " " +
+                            kwargs['message'])
+
+    async def _on_error(self, **kwargs):
+        tb = kwargs.get('traceback', None)
+        if tb:
+            self._console.print(tb)
+        self._console.print(
+            f"{self.STATUS_EMOJIS['error']} {kwargs['message']}")
 
     @property
     def progress(self):

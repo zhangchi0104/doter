@@ -78,9 +78,16 @@ class DoterApp(object):
             callable: the wrapped function
         """
         async def inner(*args, **kwargs):
-            self._ui_component.progress.start()
-            await func(*args, **kwargs)
-            self._ui_component.progress.stop()
+            try:
+                self._ui_component.progress.start()
+                await func(*args, **kwargs)
+            except:
+                self._ui_component.progress.console.print_exception(
+                    max_frames=20)
+                self._ui_component.progress.stop()
+                exit(1)
+            finally:
+                self._ui_component.progress.stop()
 
         return inner
 

@@ -1,18 +1,18 @@
-files:
+config:
   test1:
-    src: ~/doter_test1
-    dst: doter_test1
+    files:
+      ~/doter_test1: doter_test1
     before_setup:
       - "sleep 1"
 
   test2:
-    src: ~/doter_test2
-    dst: doter_test2
+    files: 
+      ~/doter_test2: doter_test2
     before_setup:
       - "sleep 2"
 
   test_dir:
-    src: ~/doter_test_dir/
-    dst: doter_test_dir/
+    files:
+      ~/doter_test_dir/: doter_test_dir/
     before_setup:
       - sleep 2

@@ -1,9 +1,10 @@
+from doter import events
+from doter.dotfile import ConfigItem
 from .command import Command
 from ..utils import create_traceback
 import asyncio
 from ..utils import link, run_hooks
 from pathlib import Path
-from ..tpyings import ConfigItem
 
 __CLASS_NAME__ = "Install"
 __COMMAND_NAME__ = "install"
@@ -15,10 +16,11 @@ class Install(Command):
 
     async def __call__(self, *args, force=False):
         try:
-            config_items = args if len(args) > 0 else self._dotfiles.keys()
+            config_items = args if len(args) > 0 else self._config.all_items
+            print(self._config)
             await asyncio.gather(*[
-                self._do_isntall(item, self._dotfiles[item], force)
-                for item in config_items
+                self._do_isntall(key, self._config.items[key], force)
+                for key in config_items
             ])
         except KeyboardInterrupt:
             await self._event_bus.publish('install/sigint')
@@ -33,14 +35,8 @@ class Install(Command):
             return
 
     async def _do_isntall(self, key: str, config: ConfigItem, force: bool):
-        src = config.get('src', None)
-        dst = config.get('dst', None)
-        if src is None or dst is None:
-            return
-        if not force and Path(src).expanduser().absolute().exists():
-            return
-        pre_install_hooks = config.get('before_setup', [])
-        post_install_hooks = config.get('after_setup', [])
+        pre_install_hooks = config.pre_hooks
+        post_install_hooks = config.post_hooks
         total_steps = len(pre_install_hooks) + len(post_install_hooks) + 1
         await self._event_bus.publish(
             'install/init',
@@ -62,7 +58,21 @@ class Install(Command):
             return
 
         # make symlink
-        link(self._dotfiles_dir, src, dst, force)
+        try:
+            for src, dst in config.files.items():
+                abs_src = Path(src)
+                if (not force) and abs_src.exists():
+                    raise RuntimeError(
+                        f'{src} already exists, and "--force is not set"')
+                link(self._dotfiles_dir, src, dst, force)
+        except RuntimeError as e:
+            await self._publish(
+                events.TASK_ERROR,
+                name=key,
+                descrption=str(e),
+                traceback=e,
+            )
+
         try:
             # run post-install hooks
             await run_hooks(post_install_hooks, self._event_bus, key)

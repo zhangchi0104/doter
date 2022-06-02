@@ -15,7 +15,8 @@ class RichUI(object):
     STATUS_EMOJIS = {
         "completed": ":white_check_mark:",
         "error": ":cross_mark:",
-        "running": ":construction:"
+        "running": ":construction:",
+        "warning": ":yellow_circle:"
     }
 
     def __init__(self, event_bus: EventBus):
@@ -126,6 +127,13 @@ class RichUI(object):
             self._console.print(tb)
         self._console.print(
             f"{self.STATUS_EMOJIS['error']} {kwargs['message']}")
+
+    async def _on_warning(self, **kwargs):
+        tb = kwargs.get('traceback', None)
+        if tb:
+            self._console.print(tb)
+        self._console.print(
+            f"{self.STATUS_EMOJIS['warning']} {kwargs['message']}")
 
     @property
     def progress(self):

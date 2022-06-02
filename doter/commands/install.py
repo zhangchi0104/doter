@@ -22,12 +22,10 @@ class Install(Command):
                 self._do_isntall(key, self._config.items[key], force)
                 for key in config_items
             ])
-        except KeyboardInterrupt:
-            await self._event_bus.publish('install/sigint')
         except KeyError as e:
             traceback = create_traceback(KeyError, e, e.__traceback__)
             await self._event_bus.publish(
-                'install/error',
+                events.TASK_ERROR, 
                 name=None,
                 description=f'Key does not exist: {str(e)}',
                 traceback=traceback,
@@ -37,9 +35,9 @@ class Install(Command):
     async def _do_isntall(self, key: str, config: ConfigItem, force: bool):
         pre_install_hooks = config.pre_hooks
         post_install_hooks = config.post_hooks
-        total_steps = len(pre_install_hooks) + len(post_install_hooks) + 1
+        total_steps = len(pre_install_hooks) + len(post_install_hooks) + len(config.files)
         await self._event_bus.publish(
-            'install/init',
+            events.TASK_INIT,
             name=key,
             description='Preparing for setup',
             total=total_steps,
@@ -50,7 +48,7 @@ class Install(Command):
         except RuntimeError as e:
             traceback = create_traceback(RuntimeError, e, e.__traceback__)
             await self._event_bus.publish(
-                'install/error',
+                events.TASK_ERROR,
                 name=key,
                 description=f'Pre-Install hook: {str(e)}',
                 traceback=traceback,
@@ -79,9 +77,10 @@ class Install(Command):
         except RuntimeError as e:
             traceback = create_traceback(RuntimeError, e, e.__traceback__)
             await self._event_bus.publish(
-                'install/error',
+                events.TASK_ERROR,
                 name=key,
                 traceback=traceback,
             )
             return
-        await self._event_bus.publish('install/done', name=key)
+        await self._event_bus.publish(events.TASK_DONE, name=key)
+

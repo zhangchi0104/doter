@@ -1,7 +1,8 @@
 from .command import Command
-from ..tpyings import ConfigItem
+from ..dotfile import ConfigItem
 from pathlib import Path
-from ..utils import link
+from ..utils import link, create_traceback
+import doter.events as events
 import asyncio
 
 __CLASS_NAME__ = "Link"
@@ -13,23 +14,33 @@ class Link(Command):
         super().__init__(config, dotfiles_dir, event_bus)
 
     async def __call__(self, *args, force=False):
-        config_items = args if len(args) > 0 else self._config['files'].keys()
         try:
+            config_items = args if len(args) > 0 else self._config.all_items
+            print(self._config)
             await asyncio.gather(*[
-                self._do_link(item, self._dotfiles[item], force)
-                for item in config_items
+                self._do_link(self._config.items[key], force)
+                for key in config_items
             ])
+        except KeyError as e:
+            traceback = create_traceback(KeyError, e, e.__traceback__)
+            await self._event_bus.publish(
+                events.TASK_ERROR,
+                name=None,
+                description=f'Key does not exist: {str(e)}',
+                traceback=traceback,
+            )
+
+    async def _do_link(self, config: ConfigItem, force: bool):
+        try:
+            for src, dst in config.files.items():
+                abs_src = Path(src)
+                if (not force) and abs_src.exists():
+                    raise RuntimeError(
+                        f'{src} already exists, and "--force is not set"')
+                link(self._dotfiles_dir, src, dst, force)
         except RuntimeError as e:
-            print(e)
-            e3it(1)
-
-    async def _do_link(self, key: str, config: ConfigItem, force: bool):
-        src = config.get('src', None)
-        dst = config.get('dst', None)
-        if src is None or dst is None:
-            return
-        if not force and Path(src).expanduser().absolute().exists():
-            print(f'Skipping {key}: file already exists')
-            return
-
-        link(self._dotfiles_dir, src, dst, force)
+            await self._publish(
+                events.ERROR,
+                descrption=str(e),
+                traceback=e,
+            )

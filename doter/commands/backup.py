@@ -1,63 +1,61 @@
+from typing import List, Tuple, Union
+
+from doter import events
 from .command import Command
 from pathlib import Path
 from shutil import move
-import os
+from ..utils import create_traceback, link
 
 import yaml
 
 __CLASS_NAME__ = "Backup"
 __COMMAND_NAME__ = "backup"
 
+Args = Union[List[str], Tuple[str]]
+
 
 class Backup(Command):
     def __init__(self, dotfiles, dotfiles_dir, event_bus):
         super().__init__(dotfiles, dotfiles_dir, event_bus)
 
-    def __call__(self, *args):
-        if len(args) == 0:
-            print("You must provide a path to existing file")
-            exit(1)
+    async def __call__(self, *args):
+        if len(args) < 2:
+            await self._event_bus.publish(
+                events.ERROR, message='Usage: <name> <dotfile>:<target>')
+            return
+        name, specs = self.parse_args(args)
         try:
-            for arg in args:
-                print(arg)
-                self._do_link(arg)
-        except FileExistsError as fee:
-            print(fee)
-            exit(1)
-        except FileNotFoundError as fne:
-            print(fne)
-            exit(1)
+            for src, dst in specs:
+                src_path = Path(src).expanduser().absolute()
+                dst_path = Path(dst).expanduser().absolute()
+                if not src_path.exists():
+                    raise FileNotFoundError(src)
 
-    def _do_link(self, path: str):
-        p = Path(path).expanduser().absolute()
-        if not p.exists():
-            raise FileNotFoundError(f'{path} does not exist')
-        if p.is_symlink():
-            raise FileExistsError(f'{path} is a symlink')
-        src = path
-        if str(p).startswith(os.path.expanduser('~')):
-            src = src.replace(os.path.expanduser('~'), '~')
+                move(src_path, dst_path)
+                link(self._dotfiles_dir, str(src_path), str(dst_path), True)
 
-        # move the file to dotfiles_dir
-        # replace the original one with symlink
-        item_name = self._path2name(p)
-        dst = self._dotfiles_dir / item_name
-        move(str(p), str(dst))
-        self._config['files'][item_name] = {'src': src, 'dst': item_name}
-        content = yaml.dump(self._config)
-        f = open(self._config_path, 'w')
-        f.write(content)
-        f.close()
+            with open(self._config_path, 'w') as f:
+                conf = self._config._raw
+                files = dict(specs)
+                if name not in conf['config'].keys():
+                    conf['config'][name] = {'files': files}
+                else:
+                    conf['config'][name]['files'] = files
+                yaml.dump(conf, f)
+            await self._event_bus.publish('backup/done')
+        except FileNotFoundError as err:
+            tb = create_traceback(FileNotFoundError, err, err.__traceback__)
+            await self._event_bus.publish(events.ERROR,
+                                          message="dotfile not found",
+                                          traceback=tb)
 
-    def _path2name(self, path: Path):
-        fn = path.name
-        item_name = ""
-        if fn[0] == '.':
-            item_name = fn[1:]
-        else:
-            item_name = fn
-        item_name = item_name.strip().replace(' ', '_')
-        if path.is_dir():
-            item_name = item_name + '_dir'
+    def parse_args(self, args: Args) -> Tuple[str, List[Tuple[str, str]]]:
+        task = args[0]
+        res = []
+        for arg in args[1::]:
+            items = arg.split(':')
+            if len(items) != 2:
+                raise ValueError(f'Invalid spec for backup ({arg})')
+            res.append((items[0], items[1]))
 
-        return item_name
+        return task, res

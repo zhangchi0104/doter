@@ -5,6 +5,7 @@ import os
 import asyncio
 from pathlib import Path
 from rich.traceback import Traceback
+import doter.events as events
 import signal
 
 
@@ -26,7 +27,7 @@ async def run_hooks(hooks: List[str], event_bus=None, name=None):
     for cmd in hooks:
         if name is not None and event_bus is not None:
             await event_bus.publish(
-                'install/update',
+                events.TASK_UPDATE,
                 name=name,
                 description=f"Executing hook: {cmd}",
             )

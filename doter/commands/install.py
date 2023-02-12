@@ -1,20 +1,19 @@
-from argparse import ArgumentParser
+from . import ArgsBase, BaseCommand
+from ..parser import ConfigItem
+from pydantic import BaseModel
 from typing import List
 
-from . import BaseCommand
-from ..parser import ConfigFile
-from pydantic import BaseModel
 
-class InstallArgs(BaseModel):
+class InstallArgs(ArgsBase):
     items: List[str] = []
     links_only: bool = False
     dry_run: bool = False
-    force: bool = True
-class InstallCommand(BaseCommand):
+    force: bool = False
+
+
+class InstallCommand(BaseCommand[InstallArgs]):
     arg_class = InstallArgs
     trigger = "install"
-    async def run(self, config: ConfigFile):
-        pass
 
-
-
+    def run(self, item: ConfigItem):
+        self.args

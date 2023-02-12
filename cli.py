@@ -1,19 +1,26 @@
 import argparse
 import argparse as A
-import asyncio as aio
-from typing import Union
+from asyncio import Queue
 
-from doter.commands import BaseCommand
-from doter.commands.install import InstallCommand, InstallArgs
+from typing import Type, Dict
+
+from doter.commands import BaseCommand, ArgsBase
+from doter.commands.install import InstallCommand
+from doter.parser import from_file
+from functools import partial
 
 
-def parse_args() -> BaseCommand:
+def parse_args():
     COMMANDS = [
         InstallCommand,
     ]
     arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("--config",
+                            "-c",
+                            help="path to config file",
+                            default="test/test.yml")
     subparsers = arg_parser.add_subparsers(dest="action")
-    trigger_map = {}
+    trigger_map: Dict[str, Type[BaseCommand]] = {}
 
     for command in COMMANDS:
         trigger_map[command.trigger] = command
@@ -21,15 +28,19 @@ def parse_args() -> BaseCommand:
         command.create_parser_args(sub_parser)
 
     args_raw = arg_parser.parse_args()
-    cmd = trigger_map[args_raw.action]
-    args = cmd.arg_class(**args_raw.__dict__)
-    return cmd(args)
+    ctor = trigger_map[args_raw.action]
+    cmd_partial = partial(ctor.from_args_dict, args_raw.__dict__)
 
-async def main(args):
-    pass
+    return cmd_partial
+
+
+def main(cmd_partial: partial[BaseCommand]):
+    q = Queue()
+    cmd = cmd_partial(q)
+    config_file = from_file(cmd.args.config)
+    cmd(config_file)
 
 
 if __name__ == "__main__":
     cmd = parse_args()
-    print(cmd.args)
-    aio.run(main(None))
+    main(cmd)

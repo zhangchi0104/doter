@@ -1,21 +1,21 @@
 # @format
 
-version: 1
+version: 2
 items:
   test1:
     mappings:
-      - ~/doter_test1: doter_test1
+      ~/doter_test1: doter_test1
     before_setup:
       - 'sleep 1'
 
   test2:
     mappings:
-      - ~/doter_test2: doter_test2
+      ~/doter_test2: doter_test2
     before_setup:
       - 'sleep 2'
 
   test_dir:
     mappings:
-      - ~/doter_test_dir/: doter_test_dir/
+      ~/doter_test_dir/: doter_test_dir/
     before_setup:
       - sleep 2

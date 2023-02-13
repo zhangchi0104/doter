@@ -1,13 +1,11 @@
 import argparse
-import argparse as A
-from asyncio import Queue
+from asyncio import run, create_task
 
 from typing import Type, Dict
 
-from doter.commands import BaseCommand, ArgsBase
+from doter.commands import BaseCommand
 from doter.commands.install import InstallCommand
 from doter.parser import from_file
-from functools import partial
 
 
 def parse_args():
@@ -28,19 +26,20 @@ def parse_args():
         command.create_parser_args(sub_parser)
 
     args_raw = arg_parser.parse_args()
-    ctor = trigger_map[args_raw.action]
-    cmd_partial = partial(ctor.from_args_dict, args_raw.__dict__)
+    cls: BaseCommand = trigger_map[args_raw.action]
+    cmd = cls.from_args_dict(args_raw.__dict__)
 
-    return cmd_partial
+    return cmd
 
 
-def main(cmd_partial: partial[BaseCommand]):
-    q = Queue()
-    cmd = cmd_partial(q)
+async def main(cmd: BaseCommand):
     config_file = from_file(cmd.args.config)
-    cmd(config_file)
+    q = cmd.queue
+    ui = cmd.UIClass(q)
+    create_task(ui())
+    await (cmd(config_file))
 
 
 if __name__ == "__main__":
     cmd = parse_args()
-    main(cmd)
+    run(main(cmd))

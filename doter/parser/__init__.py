@@ -4,7 +4,7 @@ from typing import Union, List, Dict
 
 
 class ConfigItem(BaseModel):
-    mappings: List[Dict[str, str]]
+    mappings: Dict[str, str]
     before: Union[List[str], None]
     after: Union[List[str], None]
 

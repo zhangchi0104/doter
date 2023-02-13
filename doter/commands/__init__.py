@@ -1,19 +1,22 @@
 from argparse import ArgumentParser
-from typing import List, Generic, Type, TypeVar, get_args, Dict, Any
+from enum import Enum
+from typing import List, Generic, Type, TypeVar, Union, get_args, Dict, Any
 
-A = TypeVar('A')
+from doter.ui import UIBase, UIEvent
 from pydantic import BaseModel
 from pydantic.fields import SHAPE_LIST, SHAPE_TUPLE, SHAPE_ITERABLE, SHAPE_SET, SHAPE_DEQUE, SHAPE_SEQUENCE
 
 from doter.parser import ConfigFile, ConfigItem
 from typing import List
-from joblib import Parallel, delayed
-from asyncio import Queue
+from asyncio import Queue, gather
 
 ITERABLE_SHAPES = [
     SHAPE_LIST, SHAPE_TUPLE, SHAPE_ITERABLE, SHAPE_SET, SHAPE_DEQUE,
     SHAPE_SEQUENCE
 ]
+Args = TypeVar('Args')
+
+E = TypeVar('E', bound=UIEvent)
 
 
 class ArgsBase(BaseModel):
@@ -21,33 +24,33 @@ class ArgsBase(BaseModel):
     config: str = "test/test.yml"
 
 
-class BaseCommand(Generic[A]):
+class BaseCommand(Generic[Args, E]):
     trigger = ""
-    UIClass = object
+    UIClass = UIBase
 
     @classmethod
-    def from_args_dict(cls, args_dict: Dict[str, Any], q: Queue):
+    def from_args_dict(cls, args_dict: Dict[str, Any]):
         args = cls.arg_class(**args_dict)
-        return cls(args, q)
+        return cls(args)
 
-    def __init__(self, args: A, q: Queue):
+    def __init__(self, args: Args):
         self.args = args
+        self._queue = Queue()
 
-    def run(self, config: ConfigItem):
+    async def run(self, key: str, config: ConfigItem):
         pass
 
-    def __call__(self, config: ConfigFile):
-        print(config)
-        items = self.args.items if len(
+    async def __call__(self, config: ConfigFile):
+        keys = self.args.items if len(
             self.args.items) != 0 else config.items.keys()
-        Parallel()(delayed(self._prepare_run)(item, config) for item in items)
+        await gather(*[self._prepare_run(key, config) for key in keys])
 
-    def _prepare_run(self, key: str, config: ConfigFile):
+    async def _prepare_run(self, key: str, config: ConfigFile):
         try:
             item = config.items[key]
-            self.run(item)
+            await self.run(key, item)
         except KeyError as e:
-            print(e)
+            print(f"{key} does not exist")
 
     @classmethod
     def create_parser_args(cls, parser: ArgumentParser):
@@ -70,5 +73,17 @@ class BaseCommand(Generic[A]):
 
     @classmethod
     @property
-    def arg_class(cls) -> Type[A]:
+    def arg_class(cls) -> Type[Args]:
         return get_args(cls.__orig_bases__[0])[0]
+
+    @classmethod
+    @property
+    def ui_event_class(cls) -> Type[E]:
+        return get_args(cls.__orig_bases__[0])[1]
+
+    @property
+    def queue(self):
+        return self._queue
+
+    def notify_ui(self, event: E):
+        self._queue.put_nowait(event)

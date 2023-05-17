@@ -31,7 +31,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v4.6.0
         with:
-            python-version: 3.8.10
+            python-version: ~3.8.0
       
       - name: Python Poetry Action
         uses: abatilo/actions-poetry@v2.1.3

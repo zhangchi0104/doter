@@ -10,14 +10,7 @@ import shutil
 from .common import CONFIG_FILE
 from doter.commands.install import InstallCommand, InstallArgs
 
-test1_src = Path('~/doter_test1').expanduser().absolute()
-test1_dst = Path('./test/test_files/doter_test1').absolute()
-
-test2_src = Path('~/doter_test2').expanduser().absolute()
-test2_dst = Path('./test/test_files/doter_test2').absolute()
-
-test_dir_src = Path('~/doter_test_dir').expanduser().absolute()
-test_dir_dst = Path('./tests/test_files/doter_test_dir').absolute()
+from .common import *
 
 
 @pytest.fixture
@@ -78,7 +71,8 @@ async def test_clean_all(install_cmd, clean_cmd, config_file):
 
 @pytest.mark.asyncio
 async def test_clean_skip(install_cmd, clean_cmd, config_file):
-    test1_src.touch()
+    await install_cmd(["test1", "test2"])(config_file)
+    assert test1_src.is_symlink()
     await clean_cmd(["test1"])(config_file)
-    assert test1_src.exists()
-    os.remove(test1_src)
+    assert test2_src.exists()
+

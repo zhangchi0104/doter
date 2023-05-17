@@ -1,3 +1,4 @@
+import os
 from os import PathLike
 from doter.config import ConfigItem
 
@@ -18,21 +19,24 @@ class CleanupCommand(BaseCommand[CleanupArgs, CleanupUIEvent], LoggerMixin):
 
     def _remove_link(self, p: str, name: str):
         path = self.resolve_path(p)
-        if (path.is_file() or path.is_dir()) and not self.args.force:
+        if not path.is_symlink() and not self.args.force:
             raise ItemIsNotSymlinkError(path)
 
-        if (path.is_file() or path.is_dir()) and self.args.force:
-            self.warn(f"Force removing non-symlink '{p}'")
-            rmtree(path)
-        elif path.is_symlink():
+        if path.is_symlink():
             path.unlink()
+        elif self.args.force:
+            if path.is_dir():
+                rmtree(path)
+            else:
+                os.remove(path)
+
         self._dispatch_ui_action(CleanupAction.DONE, {"name": name})
         self.info(f"Removed '{p}'")
 
     def _dispatch_ui_action(self, action: CleanupAction, payload: dict):
         self.notify_ui((CleanupUIEvent(action=action, payload=payload)))
 
-    def run(self, key: str, config: ConfigItem):
+    async def run(self, key: str, config: ConfigItem):
         try:
             for link_path in config.mappings.values():
                 self._remove_link(link_path, key)

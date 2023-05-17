@@ -4,13 +4,8 @@ from doter.commands.install import InstallCommand, InstallArgs
 from pathlib import Path
 from doter.config import ConfigFile
 
-test1_src = Path('~/doter_test1').expanduser().absolute()
-test1_dst = Path('./test/doter_test1').absolute()
 
-test2_src = Path('~/doter_test2').expanduser().absolute()
-test2_dst = Path('./test/doter_test2').absolute()
-
-from .common import CONFIG_FILE
+from .common import *
 
 @pytest.fixture
 def app():
@@ -24,42 +19,18 @@ def config_file():
 
 @pytest.fixture
 def app_with_test1():
-    test1_dst.touch()
     yield InstallCommand(InstallArgs(config=CONFIG_FILE, items=['test1']))
-
-    test1_src.unlink()
-    os.remove(test1_dst)
 
 
 @pytest.fixture
 def app_with_both():
-    test1_dst.touch()
-    test2_dst.touch()
     yield InstallCommand(
         InstallArgs(config=CONFIG_FILE, items=['test1', 'test2']))
-    try:
-        test1_src.unlink()
-        test2_src.unlink()
-        os.remove(test1_dst)
-        os.remove(test2_dst)
-    except FileNotFoundError:
-        pass
 
 
 @pytest.fixture
 def app_with_dir(app: InstallCommand):
-    src_dir_path = Path('~/doter_test_dir').expanduser()
-    dst_dir_path = Path('./test/doter_test_dir')
-    dst_dir_path.mkdir(parents=True, exist_ok=True)
-    Path(dst_dir_path / 'test_item').touch(exist_ok=True)
-    dst_dir_path.mkdir(exist_ok=True, parents=True)
     yield InstallCommand(InstallArgs(config=CONFIG_FILE, items=["test_dir"]))
-    try:
-        os.unlink(src_dir_path)
-        import shutil
-        shutil.rmtree(dst_dir_path)
-    except FileNotFoundError:
-        pass
 
 
 @pytest.mark.asyncio

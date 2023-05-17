@@ -19,3 +19,11 @@ class SubprocessError(Exception):
     @property
     def cmd(self):
         return self._cmd
+
+
+class FileAlreadExistsError(Exception):
+    def __init__(self, path: str):
+        self._path = path
+
+    def msg(self):
+        return f"file '{self._path}' already "

@@ -15,11 +15,12 @@ class ConfigFile(BaseModel):
 
     def to_file(self, path: PathLike):
         self.dict()
+        return FileExistsError()
 
-
-def from_file(path: PathLike):
-    from yaml import safe_load
-    f = open(path, 'r')
-    values = safe_load(f)
-    f.close()
-    return ConfigFile(**values)
+    @classmethod
+    def from_file(cls, path: PathLike):
+        from yaml import safe_load
+        f = open(path, 'r')
+        values = safe_load(f)
+        f.close()
+        return ConfigFile(**values)

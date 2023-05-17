@@ -5,13 +5,12 @@ from typing import Type, Dict
 
 from doter.commands import BaseCommand
 from doter.commands.install import InstallCommand
-from doter.parser import from_file
+from doter.commands.clean import CleanupCommand
+from doter.config import ConfigFile
 
 
 def parse_args():
-    COMMANDS = [
-        InstallCommand,
-    ]
+    COMMANDS = [InstallCommand, CleanupCommand]
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("--config",
                             "-c",
@@ -26,6 +25,9 @@ def parse_args():
         command.create_parser_args(sub_parser)
 
     args_raw = arg_parser.parse_args()
+    if args_raw.action is None:
+        arg_parser.print_help()
+        exit(1)
     cls: BaseCommand = trigger_map[args_raw.action]
     cmd = cls.from_args_dict(args_raw.__dict__)
 
@@ -33,11 +35,17 @@ def parse_args():
 
 
 async def main(cmd: BaseCommand):
-    config_file = from_file(cmd.args.config)
+    config_file = ConfigFile.from_file(cmd.args.config)
     q = cmd.queue
-    ui = cmd.UIClass(q)
-    create_task(ui())
-    await (cmd(config_file))
+    print(cmd)
+    with cmd.UIClass(q) as ui:
+        ui_task = create_task(ui())
+        try:
+            await cmd(config_file)
+        except Exception as e:
+            pass
+        finally:
+            ui_task.cancel()
 
 
 if __name__ == "__main__":

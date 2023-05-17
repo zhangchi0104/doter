@@ -1,30 +1,34 @@
 from argparse import ArgumentParser
-from enum import Enum
-from typing import List, Generic, Type, TypeVar, Union, get_args, Dict, Any
 
-from doter.ui import UIBase, UIEvent
+from typing import List, Generic, Type, TypeVar, get_args, Dict, Any
+
+from ..ui import UIBase, UIEvent
 from pydantic import BaseModel
 from pydantic.fields import SHAPE_LIST, SHAPE_TUPLE, SHAPE_ITERABLE, SHAPE_SET, SHAPE_DEQUE, SHAPE_SEQUENCE
 
-from doter.parser import ConfigFile, ConfigItem
+from ..config import ConfigFile, ConfigItem
 from typing import List
 from asyncio import Queue, gather
+from logging import getLogger
 
 ITERABLE_SHAPES = [
     SHAPE_LIST, SHAPE_TUPLE, SHAPE_ITERABLE, SHAPE_SET, SHAPE_DEQUE,
     SHAPE_SEQUENCE
 ]
-Args = TypeVar('Args')
-
-E = TypeVar('E', bound=UIEvent)
+from pathlib import Path
 
 
 class ArgsBase(BaseModel):
     items: List[str] = []
-    config: str = "test/test.yml"
+    config: str = "~/.dotfiles/config.yml"
 
 
-class BaseCommand(Generic[Args, E]):
+Args = TypeVar('Args', bound=ArgsBase)
+
+Event = TypeVar('Event', bound=UIEvent)
+
+
+class BaseCommand(Generic[Args, Event]):
     trigger = ""
     UIClass = UIBase
 
@@ -36,6 +40,7 @@ class BaseCommand(Generic[Args, E]):
     def __init__(self, args: Args):
         self.args = args
         self._queue = Queue()
+        self._logger = getLogger(__name__)
 
     async def run(self, key: str, config: ConfigItem):
         pass
@@ -60,6 +65,14 @@ class BaseCommand(Generic[Args, E]):
                 "default": field.default,
                 "help": field.field_info.description or "",
             }
+            short_alias = None
+            if field.alias != field.name and isinstance(field.alias, str):
+                if len(field.alias) == 1:
+                    short_alias = f"-{field.alias}"
+                else:
+                    raise ValueError(
+                        f"{field.alias} havs length {len(field.alias)}, expected to be 1"
+                    )
 
             if isinstance(field.default, bool) and not field.default:
                 params['action'] = "store_true"
@@ -69,7 +82,22 @@ class BaseCommand(Generic[Args, E]):
 
             if not field_name.startswith("--"):
                 params["nargs"] = "?"
-            parser.add_argument(field_name, **params)
+            if short_alias:
+                parser.add_argument(field_name, short_alias, **params)
+            else:
+                parser.add_argument(field_name, **params)
+
+    def resolve_path(self, p: str):
+        path = Path(p).expanduser()
+        if not path.is_absolute():
+            return self.config_dir / path
+        else:
+            return path
+
+    @property
+    def config_dir(self):
+        p = Path(self.args.config)
+        return p.parent.absolute()
 
     @classmethod
     @property
@@ -78,12 +106,12 @@ class BaseCommand(Generic[Args, E]):
 
     @classmethod
     @property
-    def ui_event_class(cls) -> Type[E]:
+    def ui_event_class(cls) -> Type[Event]:
         return get_args(cls.__orig_bases__[0])[1]
 
     @property
     def queue(self):
         return self._queue
 
-    def notify_ui(self, event: E):
+    def notify_ui(self, event: Event):
         self._queue.put_nowait(event)

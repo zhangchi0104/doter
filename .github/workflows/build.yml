@@ -33,8 +33,8 @@ jobs:
         with:
             python-version: ~3.8.0
       
-      - name: Python Poetry Action
-        uses: abatilo/actions-poetry@v2.1.3
+      - name: Setup Poetry
+        run: python3 -m pip install poetry
     
       - name: Install deps
         run: python3 -m poetry install
